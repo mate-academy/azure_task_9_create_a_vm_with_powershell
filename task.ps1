@@ -33,7 +33,6 @@ Write-Host "Creating an SSH key resource $sshKeyName ..."
 New-AzSshKey -ResourceGroupName $resourceGroupName -Name $sshKeyName -PublicKey $sshKeyPublicKey
 
 Write-Host "Creating a virtual machine $vmName ..."
-$cred = Get-Credential
 
 New-AzVM `
     -ResourceGroupName $resourceGroupName `
@@ -46,5 +45,4 @@ New-AzVM `
     -PublicIpAddressName $publicIpAddressName `
     -SecurityGroupName $networkSecurityGroupName `
     -SshKeyName $sshKeyName `
-    -Credential $cred `
     -OpenPorts 22,8080
