@@ -44,7 +44,7 @@ $vmConfig = Set-AzVMSourceImage -VM $vmConfig -PublisherName "Canonical" -Offer 
 
 $vmConfig = Add-AzVMNetworkInterface -VM $vmConfig -Id $nic.Id
 
-# Correctly create and set the SSH configuration using the proper types
+
 $sshConfig = New-Object -TypeName Microsoft.Azure.Management.Compute.Models.SshConfiguration
 $sshPublicKey = New-Object -TypeName Microsoft.Azure.Management.Compute.Models.SshPublicKey -Property @{
     Path = "/home/$adminUsername/.ssh/authorized_keys"
@@ -62,3 +62,4 @@ $vmConfig.OSProfile.LinuxConfiguration = $linuxConfig
 New-AzVM -ResourceGroupName $resourceGroupName -Location $location -VM $vmConfig
 
 Write-Host "Deployment complete."
+
