@@ -49,4 +49,3 @@ New-AzVM `
     -SecurityGroupName $networkSecurityGroupName `
     -SshKeyName $sshKeyName `
     -OpenPorts 22,8080
-
