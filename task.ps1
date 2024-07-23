@@ -1,55 +1,98 @@
-$location = "uksouth"
-$resourceGroupName = "mate-azure-task-9"
-$networkSecurityGroupName = "defaultnsg"
-$virtualNetworkName = "vnet"
-$subnetName = "default"
-$vnetAddressPrefix = "10.0.0.0/16"
-$subnetAddressPrefix = "10.0.0.0/24"
-$publicIpAddressName = "linuxboxpip"
-$sshKeyName = "linuxboxsshkey"
-$sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub"
-$vmName = "matebox"
-$vmImage = "Ubuntu2204"
-$vmSize = "Standard_B1s"
-
-Write-Host "Creating a resource group $resourceGroupName ..."
-New-AzResourceGroup -Name $resourceGroupName -Location $location
-
-Write-Host "Creating a network security group $networkSecurityGroupName ..."
-$nsgRuleSSH = New-AzNetworkSecurityRuleConfig -Name SSH  -Protocol Tcp -Direction Inbound -Priority 1001 -SourceAddressPrefix * -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 22 -Access Allow;
-$nsgRuleHTTP = New-AzNetworkSecurityRuleConfig -Name HTTP  -Protocol Tcp -Direction Inbound -Priority 1002 -SourceAddressPrefix * -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 8080 -Access Allow;
-New-AzNetworkSecurityGroup -Name $networkSecurityGroupName -ResourceGroupName $resourceGroupName -Location $location -SecurityRules $nsgRuleSSH, $nsgRuleHTTP
-
-# ↓↓↓ Write your code here ↓↓↓
 <#
   Read First:
   1)  to see documentation for the commands below use:
       Get-Help $Your_CmdLet -Full
   2)  to see available values for specific parameters below use:
       Get-Help $Your_CmdLet -Parameter $Your_Parameter
-  3)  Set preferred settings below:
+  3)  This Template is designed for
+        - creating separate NEW Resource Groupe
+        - SSH authentification
+        - password still necessary for admin privilages
+  4)  Set preferred settings below:
 #>
-# public Ip values:
+
+# general settings:
+$location =                 "uksouth"
+$resourceGroupName =        "mate-azure-task-9"
+
+# Network Security Group settings:
+$networkSecurityGroupName = "defaultnsg"
+
+# Virtual Network settings:
+$virtualNetworkName =       "vnet"
+$subnetName =               "default"
+$vnetAddressPrefix =        "10.0.0.0/16"
+$subnetAddressPrefix =      "10.0.0.0/24"
+
+# public Ip settings:
+$publicIpAddressName =      "linuxboxpip"
 $publicIpDnsprefix =        "task-9"
 $publicIpSku =              "Basic"
 $publicIpAllocation =       "Dynamic"
 
-# Network Interface values:
+# Network Interface settings:
 $nicName =                  "NetInterface"
 $ipConfigName =             "ipConfig1"
 
-# VM values:
-$vmSecurityType =           "Standard"
+# SSH settings:
+$sshKeyName =               "linuxboxsshkey"
+$sshKeyPublicKey =          Get-Content "~/.ssh/id_rsa.pub"
 
-# OS values:
+# VM settings:
+$vmName =                   "matebox"
+$vmSecurityType =           "Standard"
+$vmSize =                   "Standard_B1s"
+
+# Boot Diagnostic Storage Account settings
+$bootStorageAccName =       "bootdiagnosstorageacc"
+$bootStSkuName =            "Standard_LRS"
+$bootStKind =               "StorageV2"
+$bootStAccessTier =         "Hot"
+$bootStMinimumTlsVersion =  "TLS1_0"
+
+# OS settings:
 # manually configure Linux / Windows in "Set-AzVMOperatingSystem" section
 $osUser =                   "yegor"
+$osUserPassword =           "P@ssw0rd1234"
 $osPublisherName =          "Canonical"
 $osOffer =                  "0001-com-ubuntu-server-jammy"
 $osSku =                    "22_04-lts-gen2"
 $osVersion =                "latest"
 $osDiskSizeGB =             64
 $osDiskType =               "Premium_LRS"
+
+
+Write-Host "Creating a resource group $resourceGroupName ..."
+New-AzResourceGroup `
+  -Name                     $resourceGroupName `
+  -Location                 $location
+
+Write-Host "Creating a network security group $networkSecurityGroupName ..."
+$nsgRuleSSH = New-AzNetworkSecurityRuleConfig `
+  -Name                     SSH `
+  -Protocol                 Tcp `
+  -Direction                Inbound `
+  -Priority                 1001 `
+  -SourceAddressPrefix      * `
+  -SourcePortRange          * `
+  -DestinationAddressPrefix * `
+  -DestinationPortRange     22 `
+  -Access Allow
+$nsgRuleHTTP = New-AzNetworkSecurityRuleConfig `
+  -Name                     HTTP `
+  -Protocol                 Tcp `
+  -Direction                Inbound `
+  -Priority                 1002 `
+  -SourceAddressPrefix      * `
+  -SourcePortRange          * `
+  -DestinationAddressPrefix * `
+  -DestinationPortRange     8080 `
+  -Access Allow
+New-AzNetworkSecurityGroup `
+  -Name                     $networkSecurityGroupName `
+  -ResourceGroupName        $resourceGroupName `
+  -Location                 $location `
+  -SecurityRules            $nsgRuleSSH, $nsgRuleHTTP
 
 Write-Host "Creating a virtual network $virtualNetworkName ..."
 $networkSecurityGroupObj = Get-AzNetworkSecurityGroup `
@@ -103,22 +146,20 @@ New-AzSshKey `
   -PublicKey                $sshKeyPublicKey
 
 Write-Host "Creating Storage Account for boot diagnostic ..."
-$bootStorageAccName =       "bootdiagnosstorageacc"
 New-AzStorageAccount `
   -ResourceGroupName        $resourceGroupName `
   -Name                     $bootStorageAccName `
   -Location                 $location `
-  -SkuName                  "Standard_LRS" `
-  -Kind                     "StorageV2" `
-  -AccessTier               "Hot" `
-  -MinimumTlsVersion        "TLS1_0"
-
+  -SkuName                  $bootStSkuName `
+  -Kind                     $bootStKind `
+  -AccessTier               $bootStAccessTier `
+  -MinimumTlsVersion        $bootStMinimumTlsVersion
 
 Write-Host "Creating a Virtual Machine ..."
-$disabledPassword = ConvertTo-SecureString `
-  "P@ssw0rd1234" -AsPlainText -Force
+$SecuredPassword = ConvertTo-SecureString `
+  $osUserPassword -AsPlainText -Force
 $cred = New-Object System.Management.Automation.PSCredential `
-  ($osUser, $disabledPassword)
+  ($osUser, $SecuredPassword)
 $vmconfig = New-AzVMConfig `
   -VMName                   $vmName `
   -VMSize                   $vmSize `
