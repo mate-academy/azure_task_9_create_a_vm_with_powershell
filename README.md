@@ -79,9 +79,11 @@ In this task, you will need to write and run a PowerShell script, which deploys 
     3. Connect to the virtual machine again using SSH, install pre-requirements, and configure a service for the application
         
         ```
+            sudo apt update
             sudo apt install python3-pip
             cd /app
-            sudo mv todoapp.service /etc/systemd/system/ 
+            sudo mv todoapp.service /etc/systemd/system/
+            sudo chmod +x start.sh
             sudo systemctl daemon-reload
             sudo systemctl start todoapp
             sudo systemctl enable todoapp
