@@ -5,7 +5,7 @@ param(
 
 
 # default script values 
-$taskName = "task9"
+$taskName = "task2"
 
 $artifactsConfigPath = "$PWD/artifacts.json"
 $resourcesTemplateName = "exported-template.json"
@@ -34,59 +34,64 @@ Write-Output "Validating artifacts"
 $TemplateFileText = [System.IO.File]::ReadAllText("$tempFolderPath/$resourcesTemplateName")
 $TemplateObject = ConvertFrom-Json $TemplateFileText -AsHashtable
 
-$nsg = ( $TemplateObject.resources | Where-Object -Property type -EQ "Microsoft.Network/networkSecurityGroups")
-if ($nsg) {
-    if ($nsg.name.Count -eq 1) { 
-        Write-Output "`u{2705} Checked if the Network Security Group resource exists - OK"
+$virtualMachine = ( $TemplateObject.resources | Where-Object -Property type -EQ "Microsoft.Compute/virtualMachines" )
+if ($virtualMachine) {
+    if ($virtualMachine.name.Count -eq 1) { 
+        Write-Output "`u{2705} Checked if Virtual Machine exists - OK."
     }  else { 
         Write-Output `u{1F914}
-        throw "More than one Network Security Group resource was found in the task resource group. Please make sure that your script creates only one network security group (check if script attaches the NSG you are creating to the subnet) and try again."
+        throw "More than one Virtual Machine resource was found in the VM resource group. Please delete all un-used VMs and try again."
     }
 } else {
     Write-Output `u{1F914}
-    throw "Unable to find Network Security Group resouce. Please re-deploy the VM and try again."
+    throw "Unable to find Virtual Machine in the task resource group. Please make sure that you created the Virtual Machine and try again."
 }
 
-$virtualNetwork = ( $TemplateObject.resources | Where-Object -Property type -EQ "Microsoft.Network/virtualNetworks" )
-if ($virtualNetwork ) {
-    if ($virtualNetwork.name.Count -eq 1) { 
-        Write-Output "`u{2705} Checked if virtual network exists - OK."
-    }  else { 
-        Write-Output `u{1F914}
-        throw "More than one virtual network resource was found in the task resource group. Please make sure that your script deploys only 1 virtual network, and try again."
-    }
-} else {
-    Write-Output `u{1F914}
-    throw "Unable to find virtual network in the task resource group. Please make sure that your script creates a virtual network and try again."
-}
-
-$virtualNetworkName = $virtualNetwork.name.Replace("[parameters('virtualNetworks_", "").Replace("_name')]", "")
-if ($virtualNetworkName -eq "vnet") { 
-    Write-Output "`u{2705} Checked the virtual network name - OK."
+if ($virtualMachine.location -eq "uksouth" ) { 
+    Write-Output "`u{2705} Checked Virtual Machine location - OK."
 } else { 
     Write-Output `u{1F914}
-    throw "Unable to verify the virtual network name. Please make sure that your script creates a virtual network called 'vnet' and try again."
+    throw "Virtual is not deployed to the UK South region. Please re-deploy VM to the UK South region and try again."
 }
 
-$subnet = $virtualNetwork.properties.subnets
-if ($subnet) {
-    if ($subnet.name.Count -eq 1) { 
-        Write-Output "`u{2705} Checked if subnet exists - OK."
-    }  else { 
-        Write-Output `u{1F914}
-        throw "More than one subnet was found in the virtual network. Please make sure that your script deploys only 1 subnet, and try again."
-    }
-} else {
-    Write-Output `u{1F914}
-    throw "Unable to find subnet in the virtual network. Please make sure that your script creates a subnet and try again."
+if (-not $virtualMachine.zones) { 
+    Write-Output "`u{2705} Checked Virtual Machine availability zone - OK."
 }
 
-if ($subnet.name -eq "default") { 
-    Write-Output "`u{2705} Checked the subnet name - OK."
+if (-not $virtualMachine.properties.securityProfile) { 
+    Write-Output "`u{2705} Checked Virtual Machine security type settings - OK."
 } else { 
     Write-Output `u{1F914}
-    throw "Unable to verify the subnet name. Please make sure that your script creates a subnet called 'default' and try again."
+    throw "Virtual machine security type is set to TMP or Confidential. Please re-deploy VM with security type set to 'Standard' and try again."
 }
+
+if ($virtualMachine.properties.storageProfile.imageReference.publisher -eq "canonical") { 
+    Write-Output "`u{2705} Checked Virtual Machine OS image publisher - OK" 
+} else { 
+    Write-Output `u{1F914}
+    throw "Virtual Machine uses OS image from unknown published. Please re-deploy the VM using OS image from publisher 'Cannonical' and try again."
+}
+if ($virtualMachine.properties.storageProfile.imageReference.offer.Contains('ubuntu-server') -and $virtualMachine.properties.storageProfile.imageReference.sku.Contains('22_04')) { 
+    Write-Output "`u{2705} Checked Virtual Machine OS image offer - OK"
+} else { 
+    Write-Output `u{1F914}
+    throw "Virtual Machine uses wrong OS image. Please re-deploy VM using Ubuntu Server 22.04 and try again" 
+}
+
+if ($virtualMachine.properties.hardwareProfile.vmSize -eq "Standard_B1s") { 
+    Write-Output "`u{2705} Checked Virtual Machine size - OK"
+} else { 
+    Write-Output `u{1F914}
+    throw "Virtual Machine size is not set to B1s. Please re-deploy VM with size set to B1s and try again."
+}
+
+if ($virtualMachine.properties.osProfile.linuxConfiguration.disablePasswordAuthentication -eq $true) { 
+    Write-Output "`u{2705} Checked Virtual Machine OS user authentification settings - OK"
+} else { 
+    Write-Output `u{1F914}
+    throw "Virtual Machine uses password authentification. Please re-deploy VM using SSH key authentification for the OS admin user and try again. "
+}
+
 
 $pip = ( $TemplateObject.resources | Where-Object -Property type -EQ "Microsoft.Network/publicIPAddresses")
 if ($pip) {
@@ -94,61 +99,27 @@ if ($pip) {
         Write-Output "`u{2705} Checked if the Public IP resource exists - OK"
     }  else { 
         Write-Output `u{1F914}
-        throw "More than one Public IP resource was found in the VM resource group. Please make sure that your script creates only one public IP resource and try again."
+        throw "More than one Public IP resource was found in the VM resource group. Please delete all un-used Public IP address resources and try again."
     }
 } else {
     Write-Output `u{1F914}
-    throw "Unable to find Public IP address resouce. Please make sure that your script creates a Public IP resouce (Basic SKU, dynamic IP allocation) and try again."
+    throw "Unable to find Public IP address resouce. Please create a Public IP resouce (Basic SKU, dynamic IP allocation) and try again."
+}
+
+if (($pip.sku.name -eq "Basic" ) -and ($pip.properties.publicIPAllocationMethod -eq "Dynamic")) { 
+    Write-Output "`u{2705} Checked Public IP SKU and allocation method - OK"
+} else { 
+    Write-Output `u{1F914}
+    Write-Warning "Unable to verify Public IP SKU and allocation method. Please check if public IP using 'Basic' SKU and dynamic IP allocation method."
 }
 
 if ($pip.properties.dnsSettings.domainNameLabel) { 
-    Write-Output "`u{2705} Checked the Public IP DNS label - OK"
+    Write-Output "`u{2705} Checked Public IP DNS label - OK"
 } else { 
     Write-Output `u{1F914}
     throw "Unable to verify the Public IP DNS label. Please create the DNS label for your public IP and try again."
 }
 
-$pipName = $pip.name.Replace("[parameters('publicIPAddresses_", "").Replace("_name')]", "")
-if ($pipName -eq "linuxboxpip") { 
-    Write-Output "`u{2705} Checked the Public IP name - OK"
-} { 
-    Write-Output `u{1F914}
-    throw "Unable to verify the Public IP name. Please make sure that your script creates a public IP called 'linuxboxpip' and try again."
-}
-
-$sshKey = ( $TemplateObject.resources | Where-Object -Property type -EQ "Microsoft.Compute/sshPublicKeys")
-if ($sshKey) {
-    if ($sshKey.name.Count -eq 1) { 
-        Write-Output "`u{2705} Checked if the public SSH key resource exists - OK"
-    }  else { 
-        Write-Output `u{1F914}
-        throw "More than one public SSH key resource was found in the VM resource group. Please make sure that your script creates only one public SSH key resource and try again."
-    }
-} else {
-    Write-Output `u{1F914}
-    throw "Unable to find public SSH key resouce. Please make sure that your script creates a public SSH key resouce and try again."
-}
-
-$sshKeyName = $sshKey.name.Replace("[parameters('sshPublicKeys_", "").Replace("_name')]", "")
-if ($sshKeyName -eq "linuxboxsshkey") { 
-    Write-Output "`u{2705} Checked the public ssh key name - OK"
-} else { 
-    Write-Output `u{1F914}
-    throw "Unable to verify the public ssh key name. Please make sure that your script creates a public ssh key called 'linuxboxsshkey' and try again."
-}
-
-$virtualMachine = ( $TemplateObject.resources | Where-Object -Property type -EQ "Microsoft.Compute/virtualMachines" )
-if ($virtualMachine) {
-    if ($virtualMachine.name.Count -eq 1) { 
-        Write-Output "`u{2705} Checked if Virtual Machine exists - OK."
-    }  else { 
-        Write-Output `u{1F914}
-        throw "More than one Virtual Machine resource was found in the VM resource group. Please make sure that your script creates only 1 VM and try again."
-    }
-} else {
-    Write-Output `u{1F914}
-    throw "Unable to find Virtual Machine in the task resource group. Please make sure that your script creates a virtual machine and try again."
-}
 
 $nic = ( $TemplateObject.resources | Where-Object -Property type -EQ "Microsoft.Network/networkInterfaces")
 if ($nic) {
@@ -164,42 +135,45 @@ if ($nic) {
 }
 
 if ($nic.properties.ipConfigurations.Count -eq 1) { 
-    if ($nic.properties.ipConfigurations.properties.publicIPAddress -and $nic.properties.ipConfigurations.properties.publicIPAddress.id) {  
-        Write-Output "`u{2705} Checked if the Public IP assigned to the VM - OK"
+    if ($nic.properties.ipConfigurations.properties.publicIPAddress -and $nic.properties.ipConfigurations.properties.publicIPAddress.id) { 
+        Write-Output "`u{2705} Checked if Public IP assigned to the VM - OK"
     } else { 
         Write-Output `u{1F914}
-        throw "Unable to verify Public IP configuratio for the VM. Please make sure that your script assignes the public IP address to the VM and try agian."
+        throw "Unable to verify Public IP configuratio for the VM. Please make sure that IP configuration of the VM network interface has public IP address configured and try again."
     }
 } else {
     Write-Output `u{1F914}
-    throw "Unable to verify IP configuration of the Network Interface. Please make sure that your script creates only 1 IP configuration of the VM network interface and try again."
+    throw "Unable to verify IP configuration of the Network Interface. Please make sure that you have 1 IP configuration of the VM network interface and try again."
 }
 
-if ($virtualMachine.properties.osProfile.linuxConfiguration.ssh.publicKeys.keyData -eq $sshKey.properties.publicKey) { 
-    Write-Output "`u{2705} Checked if virtual machine uses the public ssh key 'linuxboxsshkey' - OK"
-} else { 
+
+$nsg = ( $TemplateObject.resources | Where-Object -Property type -EQ "Microsoft.Network/networkSecurityGroups")
+if ($nsg) {
+    if ($nsg.name.Count -eq 1) { 
+        Write-Output "`u{2705} Checked if the Network Security Group resource exists - OK"
+    }  else { 
+        Write-Output `u{1F914}
+        throw "More than one Network Security Group resource was found in the VM resource group. Please delete all un-used Network Security Group resources and try again."
+    }
+} else {
     Write-Output `u{1F914}
-    throw "Unable to verify, that VM uses the public ssh key 'linuxboxsshkey'. Please make sure that in New-AzVm comandled, parameter '-SshKeyName' is set to the name of the public SSH key you created earlier, and that you are not setting the parameter '-GenerateSshKey'."
+    throw "Unable to find Network Security Group resouce. Please re-deploy the VM and try again."
 }
 
-if ($virtualMachine.properties.storageProfile.imageReference.publisher -eq "canonical") { 
-    Write-Output "`u{2705} Checked Virtual Machine OS image publisher - OK" 
+$sshNsgRule = ( $nsg.properties.securityRules | Where-Object { ($_.properties.destinationPortRange -eq '22') -and ($_.properties.access -eq 'Allow')} ) 
+if ($sshNsgRule)  {
+    Write-Output "`u{2705} Checked if NSG has SSH network security rule configured - OK"
 } else { 
     Write-Output `u{1F914}
-    throw "Virtual Machine uses OS image from unknown published. Please make sure that your script creates a VM from image with friendly name 'Ubuntu2204' and try again."
-}
-if ($virtualMachine.properties.storageProfile.imageReference.offer.Contains('ubuntu-server') -and $virtualMachine.properties.storageProfile.imageReference.sku.Contains('22_04')) { 
-    Write-Output "`u{2705} Checked Virtual Machine OS image offer - OK"
-} else { 
-    Write-Output `u{1F914}
-    throw "Virtual Machine uses wrong OS image. Please make sure that your script creates a VM from image with friendly name 'Ubuntu2204' and try again." 
+    throw "Unable to fing network security group rule which allows SSH connection. Please check if you configured VM Network Security Group to allow connections on 22 TCP port and try again."
 }
 
-if ($virtualMachine.properties.hardwareProfile.vmSize -eq "Standard_B1s") { 
-    Write-Output "`u{2705} Checked Virtual Machine size - OK"
+$httpNsgRule = ( $nsg.properties.securityRules | Where-Object { ($_.properties.destinationPortRange -eq '8080') -and ($_.properties.access -eq 'Allow')} ) 
+if ($httpNsgRule)  {
+    Write-Output "`u{2705} Checked if NSG has HTTP network security rule configured - OK"
 } else { 
     Write-Output `u{1F914}
-    throw "Virtual Machine size is not set to B1s. Please make sure that your script creates a VM with size B1s and try again."
+    throw "Unable to fing network security group rule which allows HTTP connection. Please check if you configured VM Network Security Group to allow connections on 8080 TCP port and try again."
 }
 
 $response = (Invoke-WebRequest -Uri "http://$($pip.properties.dnsSettings.fqdn):8080/api/" -ErrorAction SilentlyContinue) 
