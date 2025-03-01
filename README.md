@@ -2,7 +2,7 @@
 
 Now, when you feel the power of PowerShell, you know that you can do basically anything with it in Azure, even create a VM! Having such a script would be very helpful because you are expecting your application to become even more popular, which means that you will need to deploy a lot of new VMs. 
 
-In this task, you will implement a PowerShell script, which deploys an Azure Virtual Machine to your subscription. 
+In this task, you will implement a PowerShell script, which deploys an Azure Virtual Machine to your subscription.
 
 ## Prerequisites
 
