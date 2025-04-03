@@ -7,7 +7,8 @@ $vnetAddressPrefix = "10.0.0.0/16"
 $subnetAddressPrefix = "10.0.0.0/24"
 $publicIpAddressName = "linuxboxpip"
 $sshKeyName = "linuxboxsshkey"
-$sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub" 
+$sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub"
+$dnsLabel = "levandrii$RANDOM"
 $vmName = "matebox"
 $vmImage = "Ubuntu2204"
 $vmSize = "Standard_B1s"
@@ -21,3 +22,27 @@ $nsgRuleHTTP = New-AzNetworkSecurityRuleConfig -Name HTTP  -Protocol Tcp -Direct
 New-AzNetworkSecurityGroup -Name $networkSecurityGroupName -ResourceGroupName $resourceGroupName -Location $location -SecurityRules $nsgRuleSSH, $nsgRuleHTTP
 
 # ↓↓↓ Write your code here ↓↓↓
+Write-Host "Creating Virtual Network and Subnet"
+$subnetConfig = New-AzVirtualNetworkSubnetConfig -Name $subnetName -AddressPrefix $subnetAddressPrefix
+New-AzVirtualNetwork -Name $virtualNetworkName -ResourceGroupName $resourceGroupName -Location $location -AddressPrefix $vnetAddressPrefix -Subnet $subnetConfig
+
+Write-Host "Creating Public IP Address"
+New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -AllocationMethod Static -DomainNameLabel $dnsLabel -Location $location
+
+Write-Host "Creating SSH Key Resource"
+New-AzSshKey -ResourceGroupName $resourceGroupName -Name $sshKeyName -PublicKey $sshKeyPublicKey
+
+Write-Host "Creating Virtual Machine"
+New-AzVM `
+    -ResourceGroupName $resourceGroupName `
+    -Name $vmName `
+    -Location $location `
+    -Image $vmImage `
+    -Size $vmSize `
+    -PublicIpAddressName $publicIpAddressName `
+    -SecurityGroupName $networkSecurityGroupName `
+    -SshKeyName $sshKeyName `
+    -VirtualNetworkName $virtualNetworkName `
+    -SubnetName $subnetName
+
+Write-Host "Done!"
