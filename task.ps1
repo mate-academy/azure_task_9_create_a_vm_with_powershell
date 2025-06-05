@@ -58,7 +58,6 @@ New-AzVm `
 	-Name $vmName `
 	-Image $vmImage `
 	-Size $vmSize `
-	-SecurityGroupName $networkSecurityGroupName `
 	-VirtualNetworkName $virtualNetworkName `
 	-SubnetName $subnetName `
 	-PublicIpAddressName $publicIpAddressName `
