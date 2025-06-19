@@ -21,3 +21,16 @@ $nsgRuleHTTP = New-AzNetworkSecurityRuleConfig -Name HTTP  -Protocol Tcp -Direct
 New-AzNetworkSecurityGroup -Name $networkSecurityGroupName -ResourceGroupName $resourceGroupName -Location $location -SecurityRules $nsgRuleSSH, $nsgRuleHTTP
 
 # ↓↓↓ Write your code here ↓↓↓
+$vnetSubnet = New-AzVirtualNetworkSubnetConfig -Name $subnetName -AddressPrefix $subnetAddressPrefix
+
+New-AzVirtualNetwork -Name $virtualNetworkName -ResourceGroupName $resourceGroupName -Location $location -AddressPrefix $vnetAddressPrefix -Subnet $vnetSubnet
+
+New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -AllocationMethod Static -DomainNameLabel $vmName
+
+New-AzSshKey -ResourceGroupName $resourceGroupName -Name $sshKeyName
+
+$securePassword = ConvertTo-SecureString -String "Azurecloud1!" -AsPlainText -Force;
+$user = "azureuser"
+$cred = New-Object System.Management.Automation.PSCredential ($user, $securePassword);
+
+New-AzVM -ResourceGroupName $resourceGroupName -Location $location -Name $vmName -Credential $cred -VirtualNetworkName $virtualNetworkName -SubnetName $subnetName -PublicIpAddressName $publicIpAddressName -SecurityGroupName $networkSecurityGroupName -Image $vmImage -Size $vmSize -SshKeyName $sshKeyName
