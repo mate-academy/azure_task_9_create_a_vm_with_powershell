@@ -7,7 +7,7 @@ $vnetAddressPrefix = "10.0.0.0/16"
 $subnetAddressPrefix = "10.0.0.0/24"
 $publicIpAddressName = "linuxboxpip"
 $sshKeyName = "linuxboxsshkey"
-$sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub" 
+$sshKeyPublicKey = Get-Content "C:\Users\Muska\.ssh\id_ed25519.pub"
 $vmName = "matebox"
 $vmImage = "Ubuntu2204"
 $vmSize = "Standard_B1s"
@@ -21,3 +21,26 @@ $nsgRuleHTTP = New-AzNetworkSecurityRuleConfig -Name HTTP  -Protocol Tcp -Direct
 New-AzNetworkSecurityGroup -Name $networkSecurityGroupName -ResourceGroupName $resourceGroupName -Location $location -SecurityRules $nsgRuleSSH, $nsgRuleHTTP
 
 # ↓↓↓ Write your code here ↓↓↓
+
+# deploy a virtual network
+$Subnet = New-AzVirtualNetworkSubnetConfig -Name $subnetName  -AddressPrefix $subnetAddressPrefix
+New-AzVirtualNetwork -Name $virtualNetworkName -ResourceGroupName $resourceGroupName -Location $location -AddressPrefix $vnetAddressPrefix -Subnet $Subnet
+
+#create a public IP address
+New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -AllocationMethod Static -DomainNameLabel "maksimens-azure-task-9" -Location $location
+
+#create an SSH key resource
+New-AzSshKey -ResourceGroupName $resourceGroupName -Name $sshKeyName -PublicKey $sshKeyPublicKey
+
+#create a linux virtual machine, called matebox.
+New-AzVM `
+  -Name $vmName `
+  -ResourceGroupName $resourceGroupName `
+  -Location $location `
+  -Image $vmImage `
+  -Size $vmSize `
+  -VirtualNetworkName $virtualNetworkName `
+  -SubnetName $subnetName `
+  -SecurityGroupName $networkSecurityGroupName `
+  -PublicIpAddressName $publicIpAddressName `
+  -SshKeyName $sshKeyName
