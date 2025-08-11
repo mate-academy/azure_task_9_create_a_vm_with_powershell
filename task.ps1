@@ -9,7 +9,6 @@ $publicIpAddressName = "linuxboxpip"
 $sshKeyName = "linuxboxsshkey"
 $sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub" -Raw
 $vmName = "matebox"
-$vmImage = "Ubuntu2204"
 $vmSize = "Standard_B1s"
 $vmUser = "azureuser"
 
@@ -21,7 +20,7 @@ if (-not (Get-AzResourceGroup -Name $resourceGroupName -ErrorAction SilentlyCont
     Write-Host "Resource group $resourceGroupName already exists."
 }
 
-# NSG
+# Network Security Group
 $nsg = Get-AzNetworkSecurityGroup -Name $networkSecurityGroupName -ResourceGroupName $resourceGroupName -ErrorAction SilentlyContinue
 if (-not $nsg) {
     Write-Host "Creating network security group $networkSecurityGroupName ..."
@@ -35,7 +34,7 @@ if (-not $nsg) {
     Write-Host "Network security group $networkSecurityGroupName already exists."
 }
 
-# Virtual Network
+# Virtual Network and Subnet
 $vnet = Get-AzVirtualNetwork -Name $virtualNetworkName -ResourceGroupName $resourceGroupName -ErrorAction SilentlyContinue
 if (-not $vnet) {
     Write-Host "Creating virtual network $virtualNetworkName and subnet $subnetName ..."
@@ -46,7 +45,7 @@ if (-not $vnet) {
     Write-Host "Virtual network $virtualNetworkName already exists."
 }
 
-# Public IP
+# Public IP Address
 $publicIp = Get-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -ErrorAction SilentlyContinue
 if (-not $publicIp) {
     $dnsLabel = "$vmName-dns-$((Get-Random) -as [string])"
@@ -55,9 +54,14 @@ if (-not $publicIp) {
         -AllocationMethod Static -DomainNameLabel $dnsLabel
 } else {
     Write-Host "Public IP $publicIpAddressName already exists."
+    if (-not $publicIp.DnsSettings.DomainNameLabel) {
+        $dnsLabel = "$vmName-dns-$((Get-Random) -as [string])"
+        Write-Host "Updating DNS label for existing public IP to $dnsLabel ..."
+        $publicIp | Set-AzPublicIpAddress -DomainNameLabel $dnsLabel
+    }
 }
 
-# SSH Key
+# SSH Public Key Resource
 $sshKey = Get-AzSshPublicKey -Name $sshKeyName -ResourceGroupName $resourceGroupName -ErrorAction SilentlyContinue
 if (-not $sshKey) {
     Write-Host "Creating SSH public key $sshKeyName ..."
@@ -66,7 +70,7 @@ if (-not $sshKey) {
     Write-Host "SSH public key $sshKeyName already exists."
 }
 
-# NIC
+# Network Interface
 $nicName = "${vmName}Nic"
 $nic = Get-AzNetworkInterface -Name $nicName -ResourceGroupName $resourceGroupName -ErrorAction SilentlyContinue
 if (-not $nic) {
@@ -78,14 +82,14 @@ if (-not $nic) {
     Write-Host "Network interface $nicName already exists."
 }
 
-# VM
+# Virtual Machine
 $vm = Get-AzVm -Name $vmName -ResourceGroupName $resourceGroupName -ErrorAction SilentlyContinue
 if (-not $vm) {
     Write-Host "Creating virtual machine $vmName ..."
-    $vmConfig = New-AzVmConfig -VMName $vmName -VMSize $vmSize | `
-        Set-AzVMOperatingSystem -Linux -ComputerName $vmName -Credential (New-Object System.Management.Automation.PSCredential ($vmUser, (ConvertTo-SecureString "dummyPassword123!" -AsPlainText -Force))) -DisablePasswordAuthentication | `
-        Set-AzVMSourceImage -PublisherName Canonical -Offer UbuntuServer -Skus 22_04-lts -Version latest | `
-        Add-AzVMNetworkInterface -Id $nic.Id | `
+    $vmConfig = New-AzVmConfig -VMName $vmName -VMSize $vmSize |
+        Set-AzVMOperatingSystem -Linux -ComputerName $vmName -DisablePasswordAuthentication |
+        Set-AzVMSourceImage -PublisherName Canonical -Offer UbuntuServer -Skus 22_04-lts -Version latest |
+        Add-AzVMNetworkInterface -Id $nic.Id |
         Set-AzVMSshPublicKey -KeyData $sshKeyPublicKey -Path "/home/$vmUser/.ssh/authorized_keys"
 
     New-AzVm -ResourceGroupName $resourceGroupName -Location $location -VM $vmConfig
