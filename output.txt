@@ -1,0 +1,28 @@
+Reading config
+Checking if temp folder exists
+Downloading artifacts
+Validating artifacts
+✅ Checked if the Network Security Group resource exists - OK
+✅ Checked if virtual network exists - OK.
+✅ Checked the virtual network name - OK.
+✅ Checked if subnet exists - OK.
+✅ Checked the subnet name - OK.
+✅ Checked if the Public IP resource exists - OK
+✅ Checked the Public IP DNS label - OK
+✅ Checked the Public IP name - OK
+ 
+    Write-Output `u{1F914}
+    throw "Unable to verify the Public IP name. Please make sure that your script creates a public IP called 'linuxboxpip' and try again."
+
+✅ Checked if the public SSH key resource exists - OK
+✅ Checked the public ssh key name - OK
+✅ Checked if Virtual Machine exists - OK.
+✅ Checked if the Network Interface resource exists - OK
+✅ Checked if the Public IP assigned to the VM - OK
+✅ Checked if virtual machine uses the public ssh key 'linuxboxsshkey' - OK
+✅ Checked Virtual Machine OS image publisher - OK
+✅ Checked Virtual Machine OS image offer - OK
+✅ Checked Virtual Machine size - OK
+✅ Checked if the web application is running - OK
+
+🥳 Congratulations! All tests passed!
