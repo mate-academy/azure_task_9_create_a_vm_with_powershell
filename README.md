@@ -35,19 +35,19 @@ If you are a Windows user, before running this command, please also run the foll
 
 ## Requirements
 
-In this task, you will need to write and run a PowerShell script, which deploys a Virtual Machine and all required resources to Azure subscription: 
+In this task, you will need to write and run a PowerShell script, which deploys a Virtual Machine and all required resources to Azure subscription:
 
 1. Write your script code to the file `task.ps1` in this repository:
-    
-    - In the script, you should assume that you are already logged in to Azure and using the correct subscription (don't use commands `Connect-AzAccount` and `Set-AzContext`, if needed - just run them on your computer before running the script). 
 
-    - Use any region you want, for example `uksouth`. 
+    - In the script, you should assume that you are already logged in to Azure and using the correct subscription (don't use commands `Connect-AzAccount` and `Set-AzContext`, if needed - just run them on your computer before running the script).
 
-    - Script already has code, which uses commandlet [New-AzResourceGroup](https://learn.microsoft.com/en-us/powershell/module/az.resources/new-azresourcegroup?view=azps-11.5.0) to create a resource group `mate-azure-task-9`. Please make sure that all your resources are deployed to that resource group. 
+    - Use any region you want, for example `uksouth`.
+
+    - Script already has code, which uses commandlet [New-AzResourceGroup](https://learn.microsoft.com/en-us/powershell/module/az.resources/new-azresourcegroup?view=azps-11.5.0) to create a resource group `mate-azure-task-9`. Please make sure that all your resources are deployed to that resource group.
 
     - The script already has code that uses the commandlet [New-AzNetworkSecurityGroup](https://learn.microsoft.com/en-us/powershell/module/az.network/new-aznetworksecuritygroup?view=azps-11.5.0) to create a network security group called `defaultnsg`. Please make sure that the VM has that network security group assigned to it.  
 
-    - Use comandlet [New-AzVirtualNetwork](https://learn.microsoft.com/en-us/powershell/module/az.network/new-azvirtualnetwork?view=azps-11.5.0#example-1-create-a-virtual-network-with-two-subnets) to deploy a virtual network, called `vnet` and a subnet, called `default`. 
+    - Use comandlet [New-AzVirtualNetwork](https://learn.microsoft.com/en-us/powershell/module/az.network/new-azvirtualnetwork?view=azps-11.5.0#example-1-create-a-virtual-network-with-two-subnets) to deploy a virtual network, called `vnet` and a subnet, called `default`.
 
     - Use comandlet [New-AzPublicIpAddress](https://learn.microsoft.com/en-us/powershell/module/az.network/new-azpublicipaddress?view=azps-11.5.0) to create a public IP address, called `linuxboxpip` with a DNS label.
 
