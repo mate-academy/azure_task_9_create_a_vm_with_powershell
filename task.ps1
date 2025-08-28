@@ -6,8 +6,9 @@ $subnetName = "default"
 $vnetAddressPrefix = "10.0.0.0/16"
 $subnetAddressPrefix = "10.0.0.0/24"
 $publicIpAddressName = "linuxboxpip"
+$dnsLabel = "alinavm1818"
 $sshKeyName = "linuxboxsshkey"
-$sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub" 
+$sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub"
 $vmName = "matebox"
 $vmImage = "Ubuntu2204"
 $vmSize = "Standard_B1s"
@@ -20,4 +21,27 @@ $nsgRuleSSH = New-AzNetworkSecurityRuleConfig -Name SSH  -Protocol Tcp -Directio
 $nsgRuleHTTP = New-AzNetworkSecurityRuleConfig -Name HTTP  -Protocol Tcp -Direction Inbound -Priority 1002 -SourceAddressPrefix * -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 8080 -Access Allow;
 New-AzNetworkSecurityGroup -Name $networkSecurityGroupName -ResourceGroupName $resourceGroupName -Location $location -SecurityRules $nsgRuleSSH, $nsgRuleHTTP
 
-# ↓↓↓ Write your code here ↓↓↓
+Write-Host "Deploy a virtual network $virtualNetworkName and a subnet $subnetName ..."
+$subnetConfig = New-AzVirtualNetworkSubnetConfig -Name $subnetName -AddressPrefix $subnetAddressPrefix
+New-AzVirtualNetwork -Name $virtualNetworkName -ResourceGroupName $resourceGroupName -Location $location -AddressPrefix $vnetAddressPrefix -Subnet $subnetConfig
+
+Write-Host "Creating a public IP address $publicIpAddressName ..."
+New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -AllocationMethod Static -DomainNameLabel $dnsLabel -Location $location
+
+Write-Host "Creating an SSH key resource $sshKeyName ..."
+New-AzSshKey -ResourceGroupName $resourceGroupName -Name $sshKeyName -PublicKey $sshKeyPublicKey
+
+Write-Host "Creating a linux virtual machine $vmName ..."
+New-AzVm `
+    -Name $vmName `
+    -ResourceGroupName $resourceGroupName `
+    -Location $location `
+    -Image $vmImage `
+    -Size $vmSize `
+    -VirtualNetworkName $virtualNetworkName `
+    -SubnetName $subnetName `
+    -SecurityGroupName $networkSecurityGroupName `
+    -PublicIpAddressName $publicIpAddressName `
+    -SshKeyName $sshKeyName `
+
+Write-Host "Host $vmName created successfully!"
