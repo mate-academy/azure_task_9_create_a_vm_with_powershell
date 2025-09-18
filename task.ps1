@@ -13,22 +13,28 @@ $vmName = "matebox"
 $vmImage = "Ubuntu2204"
 $vmSize = "Standard_B1s"
 $dnsPrefix = "matebox$((Get-Random -Maximum 9999))"
+$adminUsername = "azureuser"
+
 
 
 Write-Host "Creating a resource group $resourceGroupName ..."
 New-AzResourceGroup -Name $resourceGroupName -Location $location
+
 
 Write-Host "Creating a network security group $networkSecurityGroupName ..."
 $nsgRuleSSH = New-AzNetworkSecurityRuleConfig -Name SSH  -Protocol Tcp -Direction Inbound -Priority 1001 -SourceAddressPrefix * -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 22 -Access Allow;
 $nsgRuleHTTP = New-AzNetworkSecurityRuleConfig -Name HTTP  -Protocol Tcp -Direction Inbound -Priority 1002 -SourceAddressPrefix * -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 8080 -Access Allow;
 New-AzNetworkSecurityGroup -Name $networkSecurityGroupName -ResourceGroupName $resourceGroupName -Location $location -SecurityRules $nsgRuleSSH, $nsgRuleHTTP
 
+
 # ↓↓↓ Write your code here ↓↓↓
+
 
 
 $subnet  = New-AzVirtualNetworkSubnetConfig -Name $subnetName  -AddressPrefix $subnetAddressPrefix
 $Vnet = New-AzVirtualNetwork -Name $virtualNetworkName -ResourceGroupName $resourceGroupName -Location $location -AddressPrefix $vnetAddressPrefix -Subnet $subnet
 $publicIp = New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -AllocationMethod Static -DomainNameLabel $dnsPrefix -Location $location
+
 
 
 
@@ -41,12 +47,14 @@ if (Test-Path -Path $sshKeyPath) {
 }
 
 
+
 Write-Host "Creating SSH key resource $sshKeyName ..."
 if ($sshKeyPublicKey) {
-    New-AzSshKey -ResourceGroupName $resourceGroupName -Name $sshKeyName -PublicKey $sshKeyPublicKey
+    New-AzSshKey -ResourceGroupName $resourceGroupName -Name $sshKeyName -PublicKey $sshKeyPublicKey -Location $location
 } else {
-    New-AzSshKey -ResourceGroupName $resourceGroupName -Name $sshKeyName
+    New-AzSshKey -ResourceGroupName $resourceGroupName -Name $sshKeyName -Location $location
 }
+
 
 New-AzVm `
   -ResourceGroupName $resourceGroupName `
@@ -58,5 +66,5 @@ New-AzVm `
   -SubnetName $subnetName `
   -SecurityGroupName $networkSecurityGroupName `
   -PublicIpAddressName $publicIpAddressName `
-  -SshKeyName $sshKeyName
-  
+  -SshKeyName $sshKeyName `
+  -AdminUsername $adminUsername
