@@ -48,7 +48,9 @@ Write-Host "Creating an SSH key resource $sshKeyName ..."
 New-AzSshKey `
   -Name $sshKeyName `
   -ResourceGroupName $resourceGroupName `
-  -PublicKey $sshKeyPublicKey
+  -Location $location `
+  -PublicKey $sshKeyPublicKey `
+  -Force
 
 Write-Host "Creating new Virtual Machine $vmName ..."
 New-AzVM `
