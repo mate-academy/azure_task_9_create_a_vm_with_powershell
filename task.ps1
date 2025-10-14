@@ -61,5 +61,5 @@ New-AzVM `
   -SecurityGroupName $networkSecurityGroupName `
   -Image $vmImage `
   -Size $vmSize `
-  -Credential (Get-Credential) `
+  -AdminUsername "azureuser" `
   -SshKeyName $sshKeyName
