@@ -1,23 +1,57 @@
-$location = "uksouth"
-$resourceGroupName = "mate-azure-task-9"
-$networkSecurityGroupName = "defaultnsg"
-$virtualNetworkName = "vnet"
-$subnetName = "default"
-$vnetAddressPrefix = "10.0.0.0/16"
-$subnetAddressPrefix = "10.0.0.0/24"
-$publicIpAddressName = "linuxboxpip"
-$sshKeyName = "linuxboxsshkey"
-$sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub" 
-$vmName = "matebox"
-$vmImage = "Ubuntu2204"
-$vmSize = "Standard_B1s"
+[CmdletBinding()]
+param(
+  [string]$Location = "uksouth",
+  [string]$Rg       = "mate-azure-task-9",
+  [string]$Vnet     = "vnet",
+  [string]$Subnet   = "default",
+  [string]$Nsg      = "defaultnsg",
+  [string]$Pip      = "linuxboxpip",
+  [string]$DnsLabel = ("matebox-" + ([guid]::NewGuid().ToString("N").Substring(0,6))),
+  [string]$SshRes   = "linuxboxsshkey",
+  [string]$VmName   = "matebox",
+  [string]$VmSize   = "Standard_B1s",
+  [string]$Image    = "Ubuntu2204",
+  [string]$PubKey   = "$HOME/.ssh/id_rsa.pub"
+)
 
-Write-Host "Creating a resource group $resourceGroupName ..."
-New-AzResourceGroup -Name $resourceGroupName -Location $location
+Write-Host "==> Deploy to $Location"
 
-Write-Host "Creating a network security group $networkSecurityGroupName ..."
-$nsgRuleSSH = New-AzNetworkSecurityRuleConfig -Name SSH  -Protocol Tcp -Direction Inbound -Priority 1001 -SourceAddressPrefix * -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 22 -Access Allow;
-$nsgRuleHTTP = New-AzNetworkSecurityRuleConfig -Name HTTP  -Protocol Tcp -Direction Inbound -Priority 1002 -SourceAddressPrefix * -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 8080 -Access Allow;
-New-AzNetworkSecurityGroup -Name $networkSecurityGroupName -ResourceGroupName $resourceGroupName -Location $location -SecurityRules $nsgRuleSSH, $nsgRuleHTTP
+# RG
+if (-not (Get-AzResourceGroup -Name $Rg -ErrorAction SilentlyContinue)) {
+  New-AzResourceGroup -Name $Rg -Location $Location | Out-Null
+}
 
-# ↓↓↓ Write your code here ↓↓↓
+# NSG + правила
+$sshRule  = New-AzNetworkSecurityRuleConfig -Name "ssh"  -Protocol Tcp -Direction Inbound -Priority 1000 -SourceAddressPrefix * -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 22 -Access Allow
+$httpRule = New-AzNetworkSecurityRuleConfig -Name "http" -Protocol Tcp -Direction Inbound -Priority 1001 -SourceAddressPrefix * -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 80 -Access Allow
+$nsgObj   = New-AzNetworkSecurityGroup -Name $Nsg -ResourceGroupName $Rg -Location $Location -SecurityRules $sshRule,$httpRule
+
+# VNet + Subnet з NSG
+$subnetCfg = New-AzVirtualNetworkSubnetConfig -Name $Subnet -AddressPrefix "10.10.1.0/24" -NetworkSecurityGroup $nsgObj
+$vnetObj   = New-AzVirtualNetwork -Name $Vnet -ResourceGroupName $Rg -Location $Location -AddressPrefix "10.10.0.0/16" -Subnet $subnetCfg
+
+# Public IP (Standard SKU!)
+$pipObj = New-AzPublicIpAddress -Name $Pip -ResourceGroupName $Rg -Location $Location -Sku Standard -AllocationMethod Static -DomainNameLabel $DnsLabel
+
+# SSH Key (без -Location для сумісності з твоїм модулем)
+$pubKeyText = if (Test-Path $PubKey) { Get-Content -LiteralPath $PubKey -Raw } else { "" }
+$sshKeyRes  = New-AzSshKey -ResourceGroupName $Rg -Name $SshRes -PublicKey $pubKeyText
+
+# VM
+New-AzVM `
+  -ResourceGroupName $Rg `
+  -Location $Location `
+  -Name $VmName `
+  -Image $Image `
+  -Size $VmSize `
+  -VirtualNetworkName $Vnet `
+  -SubnetName $Subnet `
+  -PublicIpAddressName $Pip `
+  -DomainNameLabel $DnsLabel `
+  -SecurityGroupName $Nsg `
+  -SshKeyName $SshRes `
+  -OpenPorts 22
+
+# Вивід DNS та IP
+$pipOut = Get-AzPublicIpAddress -Name $Pip -ResourceGroupName $Rg
+Write-Host "==> FQDN: $($pipOut.DnsSettings.Fqdn)   IP: $($pipOut.IpAddress)"
