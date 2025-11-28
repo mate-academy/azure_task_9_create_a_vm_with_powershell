@@ -54,4 +54,4 @@ New-AzVm `
   -SecurityGroupName $networkSecurityGroupName `
   -PublicIpAddressName $publicIpAddressName `
   -SshKeyName $sshKeyName `
-
+  -AdminUsername $adminUsername
