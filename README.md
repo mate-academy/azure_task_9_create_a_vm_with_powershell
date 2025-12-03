@@ -43,11 +43,11 @@ In this task, you will need to write and run a PowerShell script, which deploys 
 
     - Use any region you want, for example `uksouth`. 
 
-    - Script already has code, which uses commandlet [New-AzResourceGroup](https://learn.microsoft.com/en-us/powershell/module/az.resources/new-azresourcegroup?view=azps-11.5.0) to create a resource group `mate-azure-task-9`. Please make sure that all your resources are deployed to that resource group. 
+    - Script already has code, which uses commandlet [New-AzResourceGroup](https://learn.microsoft.com/en-us/powershell/module/az.resources/new-azresourcegroup?view=azps-11.5.0) to create a resource group `mate-azure-task-9`. Please make sure that all your resources are deployed to that resource group.
 
     - The script already has code that uses the commandlet [New-AzNetworkSecurityGroup](https://learn.microsoft.com/en-us/powershell/module/az.network/new-aznetworksecuritygroup?view=azps-11.5.0) to create a network security group called `defaultnsg`. Please make sure that the VM has that network security group assigned to it.  
 
-    - Use comandlet [New-AzVirtualNetwork](https://learn.microsoft.com/en-us/powershell/module/az.network/new-azvirtualnetwork?view=azps-11.5.0#example-1-create-a-virtual-network-with-two-subnets) to deploy a virtual network, called `vnet` and a subnet, called `default`. 
+    - Use comandlet [New-AzVirtualNetwork](https://learn.microsoft.com/en-us/powershell/module/az.network/new-azvirtualnetwork?view=azps-11.5.0#example-1-create-a-virtual-network-with-two-subnets) to deploy a virtual network, called `vnet` and a subnet, called `default`.
 
     - Use comandlet [New-AzPublicIpAddress](https://learn.microsoft.com/en-us/powershell/module/az.network/new-azpublicipaddress?view=azps-11.5.0) to create a public IP address, called `linuxboxpip` with a DNS label.
 
@@ -55,7 +55,7 @@ In this task, you will need to write and run a PowerShell script, which deploys 
 
     - Use comandlet [New-AzVm](https://learn.microsoft.com/en-us/powershell/module/az.compute/new-azvm?view=azps-11.5.0) to [create a linux virtual machine](https://learn.microsoft.com/en-us/azure/virtual-machines/linux/quick-create-powershell#create-a-virtual-machine), called `matebox`.
     
-    - VM should be deployed to the `default` subnet of the virtual network `vnet`, use public IP `linuxboxpip`, network security group `defaultnsg`, and ssh key `linuxboxsshkey` (check the documentation of [New-AzVm](https://learn.microsoft.com/en-us/powershell/module/az.compute/new-azvm?view=azps-11.5.0) — it allows you to specify names of those resources as comandlet parameters). 
+    - VM should be deployed to the `default` subnet of the virtual network `vnet`, use public IP `linuxboxpip`, network security group `defaultnsg`, and ssh key `linuxboxsshkey` (check the documentation of [New-AzVm](https://learn.microsoft.com/en-us/powershell/module/az.compute/new-azvm?view=azps-11.5.0) — it allows you to specify names of those resources as comandlet parameters).
 
     - VM should use an image with the friendly name `Ubuntu2204` and size `Standard_B1s`.
 
