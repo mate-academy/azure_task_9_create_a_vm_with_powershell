@@ -1,23 +1,81 @@
-$location = "uksouth"
+# Variables
+$location = "canadacentral"
 $resourceGroupName = "mate-azure-task-9"
-$networkSecurityGroupName = "defaultnsg"
-$virtualNetworkName = "vnet"
+
+$vnetName = "vnet"
 $subnetName = "default"
-$vnetAddressPrefix = "10.0.0.0/16"
-$subnetAddressPrefix = "10.0.0.0/24"
-$publicIpAddressName = "linuxboxpip"
+$nsgName = "defaultnsg"
+
+$publicIpName = "linuxboxpip"
+$dnsLabel = "matebox$(Get-Random)"
+
 $sshKeyName = "linuxboxsshkey"
-$sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub" 
 $vmName = "matebox"
-$vmImage = "Ubuntu2204"
 $vmSize = "Standard_B1s"
 
-Write-Host "Creating a resource group $resourceGroupName ..."
-New-AzResourceGroup -Name $resourceGroupName -Location $location
+# --------------------------------------------------
+# Resource Group
+# --------------------------------------------------
+New-AzResourceGroup `
+    -Name $resourceGroupName `
+    -Location $location
 
-Write-Host "Creating a network security group $networkSecurityGroupName ..."
-$nsgRuleSSH = New-AzNetworkSecurityRuleConfig -Name SSH  -Protocol Tcp -Direction Inbound -Priority 1001 -SourceAddressPrefix * -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 22 -Access Allow;
-$nsgRuleHTTP = New-AzNetworkSecurityRuleConfig -Name HTTP  -Protocol Tcp -Direction Inbound -Priority 1002 -SourceAddressPrefix * -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 8080 -Access Allow;
-New-AzNetworkSecurityGroup -Name $networkSecurityGroupName -ResourceGroupName $resourceGroupName -Location $location -SecurityRules $nsgRuleSSH, $nsgRuleHTTP
+# --------------------------------------------------
+# Network Security Group
+# --------------------------------------------------
+$nsg = New-AzNetworkSecurityGroup `
+    -Name $nsgName `
+    -ResourceGroupName $resourceGroupName `
+    -Location $location
 
-# ↓↓↓ Write your code here ↓↓↓
+# --------------------------------------------------
+# Virtual Network and Subnet
+# --------------------------------------------------
+$subnetConfig = New-AzVirtualNetworkSubnetConfig `
+    -Name $subnetName `
+    -AddressPrefix "10.0.0.0/24"
+
+$vnet = New-AzVirtualNetwork `
+    -Name $vnetName `
+    -ResourceGroupName $resourceGroupName `
+    -Location $location `
+    -AddressPrefix "10.0.0.0/16" `
+    -Subnet $subnetConfig
+
+# --------------------------------------------------
+# Public IP Address
+# --------------------------------------------------
+$publicIp = New-AzPublicIpAddress `
+    -Name $publicIpName `
+    -ResourceGroupName $resourceGroupName `
+    -Location $location `
+    -AllocationMethod Static `
+    -Sku Standard `
+    -DomainNameLabel $dnsLabel
+
+# --------------------------------------------------
+# SSH Key
+# --------------------------------------------------
+
+$publicKey = Get-Content "$HOME\.ssh\id_ed25519.pub" -Raw
+
+$sshKey = New-AzSshKey `
+    -Name $sshKeyName `
+    -ResourceGroupName $resourceGroupName `
+    -PublicKey $publicKey
+
+# --------------------------------------------------
+# Virtual Machine
+# --------------------------------------------------
+
+New-AzVm `
+    -Name $vmName `
+    -ResourceGroupName $resourceGroupName `
+    -Location $location `
+    -Image Ubuntu2204 `
+    -Size $vmSize `
+    -VirtualNetworkName $vnetName `
+    -SubnetName $subnetName `
+    -SecurityGroupName $nsgName `
+    -PublicIpAddressName $publicIpName `
+    -SshKeyName $sshKeyName
