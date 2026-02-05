@@ -1,4 +1,4 @@
-$location = "uksouth"
+$location = "westeurope"
 $resourceGroupName = "mate-azure-task-9"
 $networkSecurityGroupName = "defaultnsg"
 $virtualNetworkName = "vnet"
@@ -7,7 +7,7 @@ $vnetAddressPrefix = "10.0.0.0/16"
 $subnetAddressPrefix = "10.0.0.0/24"
 $publicIpAddressName = "linuxboxpip"
 $sshKeyName = "linuxboxsshkey"
-$sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub" 
+$sshKeyPublicKey = Get-Content "../id_rsa.pub"
 $vmName = "matebox"
 $vmImage = "Ubuntu2204"
 $vmSize = "Standard_B1s"
@@ -21,3 +21,46 @@ $nsgRuleHTTP = New-AzNetworkSecurityRuleConfig -Name HTTP  -Protocol Tcp -Direct
 New-AzNetworkSecurityGroup -Name $networkSecurityGroupName -ResourceGroupName $resourceGroupName -Location $location -SecurityRules $nsgRuleSSH, $nsgRuleHTTP
 
 # ↓↓↓ Write your code here ↓↓↓
+
+Write-Host "Creating virtual network $virtualNetworkName ..."
+$vnet = New-AzVirtualNetwork `
+    -Name $virtualNetworkName `
+    -ResourceGroupName $resourceGroupName `
+    -Location $location `
+    -AddressPrefix $vnetAddressPrefix
+
+$subnet = Add-AzVirtualNetworkSubnetConfig `
+    -Name $subnetName `
+    -VirtualNetwork $vnet `
+    -AddressPrefix $subnetAddressPrefix
+
+$vnet | Set-AzVirtualNetwork
+
+Write-Host "Creating public IP $publicIpAddressName ..."
+$publicIp = New-AzPublicIpAddress `
+    -Name $publicIpAddressName `
+    -ResourceGroupName $resourceGroupName `
+    -Location $location `
+    -AllocationMethod Static `
+    -Sku Standard `
+    -DomainNameLabel "matebox-$(Get-Random)"
+
+Write-Host "Creating SSH key resource $sshKeyName ..."
+$sshKey = New-AzSshKey `
+    -Name $sshKeyName `
+    -ResourceGroupName $resourceGroupName `
+    -PublicKey $sshKeyPublicKey
+
+Write-Host "Creating virtual machine $vmName ..."
+New-AzVm `
+    -Name $vmName `
+    -ResourceGroupName $resourceGroupName `
+    -Location $location `
+    -Image $vmImage `
+    -Size $vmSize `
+    -VirtualNetworkName $virtualNetworkName `
+    -SubnetName $subnetName `
+    -SecurityGroupName $networkSecurityGroupName `
+    -PublicIpAddressName $publicIpAddressName `
+    -SshKeyName $sshKeyName `
+    -OpenPorts 22
