@@ -1,6 +1,6 @@
 param(
-    [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
-    [string]$ArtifactsStorageAccountName='matestorage123'
+    [Parameter(Mandatory=$false)]
+    [string]$ArtifactsStorageAccountName = 'matestorage123'
 )
 
 # default script values

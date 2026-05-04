@@ -111,7 +111,7 @@ if ($pip.properties.dnsSettings.domainNameLabel) {
 $pipName = $pip.name.Replace("[parameters('publicIPAddresses_", "").Replace("_name')]", "")
 if ($pipName -eq "linuxboxpip") { 
     Write-Output "`u{2705} Checked the Public IP name - OK"
-} { 
+} else { 
     Write-Output `u{1F914}
     throw "Unable to verify the Public IP name. Please make sure that your script creates a public IP called 'linuxboxpip' and try again."
 }
