@@ -1,4 +1,4 @@
-$location = "uksouth"
+$location = "ukwest"
 $resourceGroupName = "mate-azure-task-9"
 $networkSecurityGroupName = "defaultnsg"
 $virtualNetworkName = "vnet"
@@ -10,7 +10,7 @@ $sshKeyName = "linuxboxsshkey"
 $sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub" 
 $vmName = "matebox"
 $vmImage = "Ubuntu2204"
-$vmSize = "Standard_B1s"
+$vmSize = "Standard_B2ats_v2"
 
 Write-Host "Creating a resource group $resourceGroupName ..."
 New-AzResourceGroup -Name $resourceGroupName -Location $location
@@ -21,3 +21,20 @@ $nsgRuleHTTP = New-AzNetworkSecurityRuleConfig -Name HTTP  -Protocol Tcp -Direct
 New-AzNetworkSecurityGroup -Name $networkSecurityGroupName -ResourceGroupName $resourceGroupName -Location $location -SecurityRules $nsgRuleSSH, $nsgRuleHTTP
 
 # ↓↓↓ Write your code here ↓↓↓
+
+Write-Host "Creating a virtual network $virtualNetworkName with subnet $subnetName ..."
+$subnetConfig = New-AzVirtualNetworkSubnetConfig -Name $subnetName -AddressPrefix $subnetAddressPrefix
+New-AzVirtualNetwork -Name $virtualNetworkName -ResourceGroupName $resourceGroupName -Location $location -AddressPrefix $vnetAddressPrefix -Subnet $subnetConfig
+
+Write-Host "Creating a public IP address $publicIpAddressName ..."
+$dnsLabel = "matebox-$(Get-Random)"
+New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -AllocationMethod Static -DomainNameLabel $dnsLabel
+
+Write-Host "Creating SSH key resource $sshKeyName ..."
+New-AzSshKey -Name $sshKeyName -ResourceGroupName $resourceGroupName -PublicKey $sshKeyPublicKey
+
+Write-Host "Creating virtual machine $vmName ..."
+New-AzVm -ResourceGroupName $resourceGroupName -Name $vmName -Location $location -Image $vmImage -Size $vmSize -VirtualNetworkName $virtualNetworkName -SubnetName $subnetName -PublicIpAddressName $publicIpAddressName -SecurityGroupName $networkSecurityGroupName -SshKeyName $sshKeyName
+
+Write-Host "VM deployment completed successfully!"
+Write-Host "You can connect to your VM using: ssh azureuser@$dnsLabel.$location.cloudapp.azure.com"
