@@ -1,4 +1,4 @@
-$location = "uksouth"
+$location = "westeurope"
 $resourceGroupName = "mate-azure-task-9"
 $networkSecurityGroupName = "defaultnsg"
 $virtualNetworkName = "vnet"
@@ -6,8 +6,9 @@ $subnetName = "default"
 $vnetAddressPrefix = "10.0.0.0/16"
 $subnetAddressPrefix = "10.0.0.0/24"
 $publicIpAddressName = "linuxboxpip"
+$domainNameLabel = "mate-todoapp"
 $sshKeyName = "linuxboxsshkey"
-$sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub" 
+$sshKeyPublicKey = Get-Content ".\id_rsa.pub"
 $vmName = "matebox"
 $vmImage = "Ubuntu2204"
 $vmSize = "Standard_B1s"
@@ -21,3 +22,15 @@ $nsgRuleHTTP = New-AzNetworkSecurityRuleConfig -Name HTTP  -Protocol Tcp -Direct
 New-AzNetworkSecurityGroup -Name $networkSecurityGroupName -ResourceGroupName $resourceGroupName -Location $location -SecurityRules $nsgRuleSSH, $nsgRuleHTTP
 
 # ↓↓↓ Write your code here ↓↓↓
+Write-Host "Creating a virtual network $virtualNetworkName..."
+$subnet = New-AzVirtualNetworkSubnetConfig -Name $subnetName -AddressPrefix $subnetAddressPrefix
+New-AzVirtualNetwork -Name $virtualNetworkName -ResourceGroupName $resourceGroupName -Location $location -AddressPrefix $vnetAddressPrefix -Subnet $subnet
+
+Write-Host "Creating a public IP address $publicIpAddressName..."
+New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -AllocationMethod Static -DomainNameLabel $domainNameLabel
+
+Write-Host "Creating a SSH key resource $sshKeyName..."
+New-AzSshKey -Name $sshKeyName -ResourceGroupName $resourceGroupName -Location $location -PublicKey $sshKeyPublicKey
+
+Write-Host "Creating a virtual machine $vmName..."
+New-AzVm -ResourceGroupName $resourceGroupName -Location $location -Name $vmName -VirtualNetworkName $virtualNetworkName -SubnetName $subnetName -SecurityGroupName $networkSecurityGroupName -PublicIpAddressName $publicIpAddressName -SshKeyName $sshKeyName -Image $vmImage -Size $vmSize
