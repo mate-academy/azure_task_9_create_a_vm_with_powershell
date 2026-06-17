@@ -39,23 +39,23 @@ In this task, you will need to write and run a PowerShell script, which deploys 
 
 1. Write your script code to the file `task.ps1` in this repository:
     
-    - In the script, you should assume that you are already logged in to Azure and using the correct subscription (don't use commands `Connect-AzAccount` and `Set-AzContext`, if needed - just run them on your computer before running the script). 
+    - In the script, you should assume that you are already logged in to Azure and using the correct subscription (don't use commands `Connect-AzAccount` and `Set-AzContext`, if needed - just run them on your computer before running the script).
 
-    - Use any region you want, for example `uksouth`. 
+    - Use any region you want, for example `uksouth`.
 
-    - Script already has code, which uses commandlet [New-AzResourceGroup](https://learn.microsoft.com/en-us/powershell/module/az.resources/new-azresourcegroup?view=azps-11.5.0) to create a resource group `mate-azure-task-9`. Please make sure that all your resources are deployed to that resource group. 
+    - Script already has code, which uses commandlet [New-AzResourceGroup](https://learn.microsoft.com/en-us/powershell/module/az.resources/new-azresourcegroup?view=azps-11.5.0) to create a resource group `mate-azure-task-9`. Please make sure that all your resources are deployed to that resource group.
 
     - The script already has code that uses the commandlet [New-AzNetworkSecurityGroup](https://learn.microsoft.com/en-us/powershell/module/az.network/new-aznetworksecuritygroup?view=azps-11.5.0) to create a network security group called `defaultnsg`. Please make sure that the VM has that network security group assigned to it.  
 
-    - Use comandlet [New-AzVirtualNetwork](https://learn.microsoft.com/en-us/powershell/module/az.network/new-azvirtualnetwork?view=azps-11.5.0#example-1-create-a-virtual-network-with-two-subnets) to deploy a virtual network, called `vnet` and a subnet, called `default`. 
+    - Use comandlet [New-AzVirtualNetwork](https://learn.microsoft.com/en-us/powershell/module/az.network/new-azvirtualnetwork?view=azps-11.5.0#example-1-create-a-virtual-network-with-two-subnets) to deploy a virtual network, called `vnet` and a subnet, called `default`.
 
     - Use comandlet [New-AzPublicIpAddress](https://learn.microsoft.com/en-us/powershell/module/az.network/new-azpublicipaddress?view=azps-11.5.0) to create a public IP address, called `linuxboxpip` with a DNS label.
 
     - Use comandlet [New-AzSshKey](https://learn.microsoft.com/en-us/powershell/module/az.compute/new-azsshkey?view=azps-11.5.0) to create an [SSH key resource](https://learn.microsoft.com/en-us/azure/virtual-machines/ssh-keys-portal), called `linuxboxsshkey`. It is recommended (but not required) to upload your existing public SSH key to that SSH key resource (for that, you can use comandlet Get-Content to load the content of your public SSH key to the variable, and then use that variable to set the parameter `-PublicKey` of the `-New-AzSshKey`).  
 
     - Use comandlet [New-AzVm](https://learn.microsoft.com/en-us/powershell/module/az.compute/new-azvm?view=azps-11.5.0) to [create a linux virtual machine](https://learn.microsoft.com/en-us/azure/virtual-machines/linux/quick-create-powershell#create-a-virtual-machine), called `matebox`.
-    
-    - VM should be deployed to the `default` subnet of the virtual network `vnet`, use public IP `linuxboxpip`, network security group `defaultnsg`, and ssh key `linuxboxsshkey` (check the documentation of [New-AzVm](https://learn.microsoft.com/en-us/powershell/module/az.compute/new-azvm?view=azps-11.5.0) — it allows you to specify names of those resources as comandlet parameters). 
+
+    - VM should be deployed to the `default` subnet of the virtual network `vnet`, use public IP `linuxboxpip`, network security group `defaultnsg`, and ssh key `linuxboxsshkey` (check the documentation of [New-AzVm](https://learn.microsoft.com/en-us/powershell/module/az.compute/new-azvm?view=azps-11.5.0) — it allows you to specify names of those resources as comandlet parameters).
 
     - VM should use an image with the friendly name `Ubuntu2204` and size `Standard_B1s`.
 
@@ -66,7 +66,7 @@ In this task, you will need to write and run a PowerShell script, which deploys 
     1. Connect to the VM using SSH, create a folder `/app`, and configure your user as an owned of the folder: 
         ```
             ssh <your-vm-username>@<your-public-ip-DNS-name>
-            sudo mkdir /app 
+            sudo mkdir /app
             sudo chown <your-vm-username>:<your-vm-username> /app
         ```
 
@@ -81,7 +81,7 @@ In this task, you will need to write and run a PowerShell script, which deploys 
         ```
             sudo apt install python3-pip
             cd /app
-            sudo mv todoapp.service /etc/systemd/system/ 
+            sudo mv todoapp.service /etc/systemd/system/
             sudo systemctl daemon-reload
             sudo systemctl start todoapp
             sudo systemctl enable todoapp
