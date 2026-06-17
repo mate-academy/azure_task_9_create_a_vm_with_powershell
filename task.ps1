@@ -30,10 +30,11 @@ New-AzSshKey -ResourceGroupName $resourceGroupName -Name $sshKeyName -PublicKey 
 New-AzVm `
     -ResourceGroupName $resourceGroupName `
     -Name $vmName `
-    -Location $Location `
-    -image $vmImage `
-    -size $vmSize `
+    -Location $location `
+    -Image $vmImage `
+    -Size $vmSize `
+    -SubnetName $subnetName `
+    -SecurityGroupName $networkSecurityGroupName `
     -PublicIpAddressName $publicIpAddressName `
     -VirtualNetworkName $virtualNetworkName `
-    -OpenPorts 22,8080 `
     -SshKeyName $sshKeyName
