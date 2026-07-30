@@ -58,3 +58,31 @@ New-AzVm `
   -PublicIpAddressName $publicIpAddressName `
   -SecurityGroupName $networkSecurityGroupName `
   -SshKeyName $sshKeyName
+
+Write-Host "Deploying the web application to $vmName ..."
+$vm = Get-AzVM -ResourceGroupName $resourceGroupName -Name $vmName
+$vmUsername = $vm.OsProfile.AdminUsername
+$repoUrl = "https://github.com/Anastasiia-Chikrizova/azure_task_9_create_a_vm_with_powershell.git"
+
+$deploymentScript = @"
+set -e
+sudo mkdir -p /app
+sudo chown ${vmUsername}:${vmUsername} /app
+rm -rf /tmp/app-repo
+git clone --depth 1 $repoUrl /tmp/app-repo
+cp -r /tmp/app-repo/app/. /app/
+rm -rf /tmp/app-repo
+sudo apt-get update
+sudo apt-get install -y python3-pip
+sudo mv /app/todoapp.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl start todoapp
+sudo systemctl enable todoapp
+systemctl status todoapp --no-pager
+"@
+
+Invoke-AzVMRunCommand `
+  -ResourceGroupName $resourceGroupName `
+  -VMName $vmName `
+  -CommandId "RunShellScript" `
+  -ScriptString $deploymentScript
