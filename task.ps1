@@ -12,11 +12,15 @@ $publicIpAddressName = "linuxboxpip"
 $dnsLabel = "rodops-matebox-task-9"
 
 $sshKeyName = "linuxboxsshkey"
+$sshKeyPrivateKey = "~/.ssh/id_ed25519"
 $sshKeyPublicKey = Get-Content "~/.ssh/id_ed25519.pub"
 
 $vmName = "matebox"
 $vmImage = "Ubuntu2204"
 $vmSize = "Standard_B1s"
+
+$appWorkDir = "/app"
+$userName = "azureuser"
 
 
 # Resource Group
@@ -156,5 +160,49 @@ if (-not $vm) {
         -SshKeyName $sshKeyName `
         -Image $vmImage `
         -Size $vmSize `
-        -Credential (New-Object PSCredential("azureuser", (ConvertTo-SecureString "unused" -AsPlainText -Force)))
+        -Credential (New-Object PSCredential($userName, (ConvertTo-SecureString "unused" -AsPlainText -Force)))
 }
+
+
+$dnsName = $publicIp.DnsSettings.Fqdn
+
+Write-Host "Preparing $appWorkDir on VM..."
+ssh `
+    -i $sshKeyPrivateKey `
+    -o StrictHostKeyChecking=no `
+    "$userName@$dnsName" `
+    "sudo mkdir -p $appWorkDir && sudo chown ${userName}:${userName} $appWorkDir "
+
+
+Write-Host "Copying application..."
+
+scp `
+    -i $sshKeyPrivateKey `
+    -o StrictHostKeyChecking=no `
+    -r app/* `
+    "${userName}@${dnsName}:$appWorkDir/"
+
+
+Write-Host "Installing and starting application..."
+
+ssh `
+    -i $sshKeyPrivateKey `
+    -o StrictHostKeyChecking=no `
+    "$userName@$dnsName" `
+    @"
+sudo apt-get update &&
+sudo apt-get install -y python3-pip &&
+sudo chmod +x $appWorkDir/start.sh &&
+sudo mv /app/todoapp.service /etc/systemd/system/ &&
+sudo systemctl daemon-reload &&
+sudo systemctl start todoapp &&
+sudo systemctl enable todoapp
+"@
+
+Write-Host "Checking application status..."
+
+ssh `
+    -i $sshKeyPrivateKey `
+    -o StrictHostKeyChecking=no `
+    "$userName@$dnsName" `
+    "systemctl status todoapp --no-pager"
