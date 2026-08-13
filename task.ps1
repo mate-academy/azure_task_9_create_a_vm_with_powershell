@@ -1,4 +1,4 @@
-$location = "uksouth"
+$location = "swedencentral"
 $resourceGroupName = "mate-azure-task-9"
 $networkSecurityGroupName = "defaultnsg"
 $virtualNetworkName = "vnet"
@@ -7,10 +7,10 @@ $vnetAddressPrefix = "10.0.0.0/16"
 $subnetAddressPrefix = "10.0.0.0/24"
 $publicIpAddressName = "linuxboxpip"
 $sshKeyName = "linuxboxsshkey"
-$sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub" 
+$sshKeyPublicKey = Get-Content "C:\Users\nicho\.ssh\id_ed25519_new.pub"
 $vmName = "matebox"
 $vmImage = "Ubuntu2204"
-$vmSize = "Standard_B1s"
+$vmSize = "Standard_B2ats_v2"
 
 Write-Host "Creating a resource group $resourceGroupName ..."
 New-AzResourceGroup -Name $resourceGroupName -Location $location
@@ -20,4 +20,23 @@ $nsgRuleSSH = New-AzNetworkSecurityRuleConfig -Name SSH  -Protocol Tcp -Directio
 $nsgRuleHTTP = New-AzNetworkSecurityRuleConfig -Name HTTP  -Protocol Tcp -Direction Inbound -Priority 1002 -SourceAddressPrefix * -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 8080 -Access Allow;
 New-AzNetworkSecurityGroup -Name $networkSecurityGroupName -ResourceGroupName $resourceGroupName -Location $location -SecurityRules $nsgRuleSSH, $nsgRuleHTTP
 
-# ↓↓↓ Write your code here ↓↓↓
+$subnetConfig = New-AzVirtualNetworkSubnetConfig -Name $subnetName -AddressPrefix $subnetAddressPrefix
+
+$vnet = New-AzVirtualNetwork -Name $virtualNetworkName -ResourceGroupName $resourceGroupName `
+                             -Location $location -AddressPrefix $vnetAddressPrefix `
+                             -Subnet $subnetConfig
+
+$dnsLabel = "matebox-pip-$(Get-Random)"
+$publicIp = New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName `
+                                   -Location $location -AllocationMethod Static `
+                                   -DomainNameLabel $dnsLabel
+
+$sshKey = New-AzSshKey -Name $sshKeyName -ResourceGroupName $resourceGroupName `
+                       -Location $location -PublicKey $sshKeyPublicKey
+
+New-AzVm -ResourceGroupName $resourceGroupName -Location $location -Name $vmName `
+         -VirtualNetworkName $virtualNetworkName -SubnetName $subnetName `
+         -PublicIpAddressName $publicIpAddressName -SecurityGroupName $networkSecurityGroupName `
+         -SshKeyName $sshKeyName `
+         -ImageName $vmImage -Size $vmSize `
+         -Credential (Get-Credential)
