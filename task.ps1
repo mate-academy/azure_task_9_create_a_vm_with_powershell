@@ -14,8 +14,8 @@ $vmSize = "Standard_B2ats_v2"
 $vmAdminUsername = "prostoponchik"
 
 if (Get-AzResourceGroup -Name $resourceGroupName -ErrorAction SilentlyContinue) {
-    Write-Host "Resource group $resourceGroupName already exists. Deleting it..."
-    Remove-AzResourceGroup -Name $resourceGroupName -Force
+  Write-Host "Resource group $resourceGroupName already exists. Deleting it..."
+  Remove-AzResourceGroup -Name $resourceGroupName -Force
 }
 
 Write-Host "Creating a resource group $resourceGroupName ..."
@@ -47,6 +47,8 @@ New-AzVM `
   -image $vmImage `
   -size $vmSize `
   -PublicIpAddressName $publicIpAddressName `
+  -VirtualNetworkName $virtualNetworkName `
+  -SubnetName $subnetName `
   -SecurityGroupName $networkSecurityGroupName `
   -SshKeyName $sshKeyName `
   -Credential $vmCredential
