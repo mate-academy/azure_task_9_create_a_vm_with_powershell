@@ -57,7 +57,7 @@ In this task, you will need to write and run a PowerShell script, which deploys 
     
     - VM should be deployed to the `default` subnet of the virtual network `vnet`, use public IP `linuxboxpip`, network security group `defaultnsg`, and ssh key `linuxboxsshkey` (check the documentation of [New-AzVm](https://learn.microsoft.com/en-us/powershell/module/az.compute/new-azvm?view=azps-11.5.0) — it allows you to specify names of those resources as comandlet parameters). 
 
-    - VM should use an image with the friendly name `Ubuntu2204` and size `Standard_B1s`.
+    - VM should use an image with the friendly name `Ubuntu2404` and size `Standard_B2ats_v2`.
 
 2. When the script is ready, run it to deploy resources to your subscription. 
 
