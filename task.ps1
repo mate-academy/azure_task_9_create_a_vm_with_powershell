@@ -27,3 +27,20 @@ New-AzVirtualNetwork -Name $virtualNetworkName -ResourceGroupName $resourceGroup
 New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -AllocationMethod Static -DomainNameLabel matebox-illia -Location $location
 New-AzSshKey -ResourceGroupName $resourceGroupName -Name $sshKeyName -PublicKey $sshKeyPublicKey
 New-AzVm -ResourceGroupName $resourceGroupName -Location $location -Name $vmName -Size $vmSize -Image $vmImage -VirtualNetworkName $virtualNetworkName -SubnetName $subnetName -PublicIpAddressName $publicIpAddressName -SecurityGroupName $networkSecurityGroupName -SshKeyName $sshKeyName
+
+$publicIp = Get-AzPublicIpAddress -ResourceGroupName $resourceGroupName -Name $publicIpAddressName
+$vmDns = $publicIp.DnsSettings.Fqdn
+$vmUser = "illia_dev"
+
+Write-Host "Waiting for VM to initialize SSH"
+Start-Sleep -Seconds 30
+
+Write-Host "Creating /app directory"
+ssh -o StrictHostKeyChecking=no $vmUser@$vmDns "sudo mkdir -p /app && sudo chown ${vmUser}:${vmUser} /app"
+
+Write-Host "Copying application files"
+scp -o StrictHostKeyChecking=no -r app/* "${vmUser}@${vmDns}:/app"
+
+Write-Host "Configuring and starting the web service"
+ssh -o StrictHostKeyChecking=no $vmUser@$vmDns "sudo apt-get update && sudo apt-get install python3-pip -y && cd /app && sudo mv todoapp.service /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl start todoapp && sudo systemctl enable todoapp && systemctl status todoapp"
+
