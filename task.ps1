@@ -57,3 +57,15 @@ New-AzVm `
   -SecurityGroupName $networkSecurityGroupName `
   -SshKeyName $sshKeyName `
   -GenerateSshKey:$false
+
+$domenName = (Get-AzPublicIpAddress -ResourceGroupName $resourceGroupName -Name $publicIpAddressName).DnsSettings.Fqdn
+
+ssh -o StrictHostKeyChecking=no azureuser@$domenName "sudo mkdir -p /app; sudo chown azureuser:azureuser /app"
+
+scp -o StrictHostKeyChecking=no -r app/* azureuser@${domenName}:/app
+
+ssh -o StrictHostKeyChecking=no azureuser@$domenName "sudo apt update; sudo apt install -y python3-pip"
+
+ssh -o StrictHostKeyChecking=no azureuser@$domenName "cd /app; sudo mv todoapp.service /etc/systemd/system/; sudo systemctl daemon-reload; sudo systemctl start todoapp; sudo systemctl enable todoapp"
+
+ssh -o StrictHostKeyChecking=no azureuser@$domenName "systemctl status todoapp --no-pager"
