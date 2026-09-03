@@ -69,3 +69,5 @@ ssh -o StrictHostKeyChecking=no azureuser@$domenName "sudo apt update; sudo apt 
 ssh -o StrictHostKeyChecking=no azureuser@$domenName "cd /app; sudo mv todoapp.service /etc/systemd/system/; sudo systemctl daemon-reload; sudo systemctl start todoapp; sudo systemctl enable todoapp"
 
 ssh -o StrictHostKeyChecking=no azureuser@$domenName "systemctl status todoapp --no-pager"
+
+Remove-AzResourceGroup -Name $resourceGroupName -Force
