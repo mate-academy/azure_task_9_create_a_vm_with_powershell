@@ -1,0 +1,80 @@
+ResourceGroupName        : mate-azure-task-9                                                     
+Id                       : /subscriptions/fe604f1d-1247-450a-9db2-7981de4c1d00/resourceGroups/ma 
+                           te-azure-task-9/providers/Microsoft.Compute/virtualMachines/matebox   
+VmId                     : c509a2cd-da6d-411d-8753-4a3cf0e9b838                                  
+Name                     : matebox                                                               
+Type                     : Microsoft.Compute/virtualMachines                                     
+Location                 : centralus                                                             
+ExtendedLocation         :                                                                       
+LicenseType              :                                                                       
+Tags                     : {}                                                                    
+AvailabilitySetReference :                                                                       
+DiagnosticsProfile       :                                                                       
+Extensions               : {}                                                                    
+HardwareProfile          : Microsoft.Azure.Management.Compute.Models.HardwareProfile             
+InstanceView             :                                                                       
+NetworkProfile           : Microsoft.Azure.Management.Compute.Models.NetworkProfile              
+SecurityProfile          : Microsoft.Azure.Management.Compute.Models.SecurityProfile             
+OsName                   :                                                                       
+OsVersion                :                                                                       
+HyperVGeneration         :                                                                       
+OSProfile                : Microsoft.Azure.Management.Compute.Models.OSProfile                   
+BillingProfile           :                                                                       
+Plan                     :                                                                       
+ProvisioningState        : Succeeded                                                             
+StorageProfile           : Microsoft.Azure.Management.Compute.Models.StorageProfile              
+DisplayHint              : Compact                                                               
+Identity                 :                                                                       
+Zones                    :                                                                       
+FullyQualifiedDomainName : matebox-3e2771.centralus.cloudapp.azure.com                           
+AdditionalCapabilities   :                                                                       
+ProximityPlacementGroup  :                                                                       
+Host                     :                                                                       
+VirtualMachineScaleSet   :                                                                       
+EvictionPolicy           :                                                                       
+Priority                 :                                                                       
+HostGroup                :                                                                       
+CapacityReservation      :                                                                       
+UserData                 :                                                                       
+ApplicationProfile       :                                                                       
+PlatformFaultDomain      :                                                                       
+TimeCreated              : 05.09.2026 20:03:32                                                   
+Etag                     : "1"                                                                   
+Placement                :                                                                       
+AddProxyAgentExtension   :                                                                       
+ScheduledEventsPolicy    :                                                                       
+RequestId                :                                                                       
+StatusCode               : 0
+
+PS C:\Mate Academy\azure_task_9_create_a_vm_with_powershell> scripts/validate-artifacts.ps1
+Reading config
+Checking if temp folder exists
+Downloading artifacts
+Validating artifacts
+✅ Checked if the Network Security Group resource exists - OK
+✅ Checked if virtual network exists - OK.
+✅ Checked the virtual network name - OK.
+✅ Checked if subnet exists - OK.
+✅ Checked the subnet name - OK.
+✅ Checked if the Public IP resource exists - OK
+✅ Checked the Public IP DNS label - OK
+✅ Checked the Public IP name - OK
+ 
+    Write-Output `u{1F914}
+    throw "Unable to verify the Public IP name. Please make sure that your script creates a public IP called 'linuxboxpip' and try again."
+
+✅ Checked if the public SSH key resource exists - OK
+✅ Checked the public ssh key name - OK
+✅ Checked if Virtual Machine exists - OK.
+✅ Checked if the Network Interface resource exists - OK
+✅ Checked if the Public IP assigned to the VM - OK
+✅ Checked if virtual machine uses the public ssh key 'linuxboxsshkey' - OK
+✅ Checked Virtual Machine OS image publisher - OK
+✅ Checked Virtual Machine OS image offer - OK
+🤔
+Exception: C:\Mate Academy\azure_task_9_create_a_vm_with_powershell\scripts\validate-artifacts.ps1:202:5
+Line |
+ 202 |      throw "Virtual Machine size is not set to B1s. Please make sure t …
+     |      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | Virtual Machine size is not set to B1s. Please make sure that your script creates a VM
+     | with size B1s and try again.
