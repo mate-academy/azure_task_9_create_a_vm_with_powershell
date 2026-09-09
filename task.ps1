@@ -1,4 +1,4 @@
-$location = "uksouth"
+$location = "mexicocentral"
 $resourceGroupName = "mate-azure-task-9"
 $networkSecurityGroupName = "defaultnsg"
 $virtualNetworkName = "vnet"
@@ -10,7 +10,7 @@ $sshKeyName = "linuxboxsshkey"
 $sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub" 
 $vmName = "matebox"
 $vmImage = "Ubuntu2204"
-$vmSize = "Standard_B1s"
+$vmSize = "Standard_B2ats_v2"
 
 Write-Host "Creating a resource group $resourceGroupName ..."
 New-AzResourceGroup -Name $resourceGroupName -Location $location
@@ -21,3 +21,34 @@ $nsgRuleHTTP = New-AzNetworkSecurityRuleConfig -Name HTTP  -Protocol Tcp -Direct
 New-AzNetworkSecurityGroup -Name $networkSecurityGroupName -ResourceGroupName $resourceGroupName -Location $location -SecurityRules $nsgRuleSSH, $nsgRuleHTTP
 
 # ↓↓↓ Write your code here ↓↓↓
+Write-Host "Creating a virtual network $virtualNetworkName with subnet $subnetName ..."
+$nsg = Get-AzNetworkSecurityGroup -Name $networkSecurityGroupName -ResourceGroupName $resourceGroupName
+
+$subnetConfig = New-AzVirtualNetworkSubnetConfig -Name $subnetName `
+    -AddressPrefix $subnetAddressPrefix -NetworkSecurityGroup $nsg
+
+$vnet = New-AzVirtualNetwork -Name $virtualNetworkName -ResourceGroupName $resourceGroupName `
+    -Location $location -AddressPrefix $vnetAddressPrefix -Subnet $subnetConfig
+
+Write-Host "Creating a public IP address $publicIpAddressName ..."
+$dnsLabel = "matebox-" + (Get-Random -Maximum 99999)
+
+$publicIp = New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName `
+    -Location $location -AllocationMethod Static -Sku Standard -DomainNameLabel $dnsLabel
+
+Write-Host "Creating an SSH key resource $sshKeyName ..."
+New-AzSshKey -Name $sshKeyName -ResourceGroupName $resourceGroupName -PublicKey $sshKeyPublicKey
+
+Write-Host "Creating a virtual machine $vmName ..."
+New-AzVm `
+    -ResourceGroupName $resourceGroupName `
+    -Location $location `
+    -Name $vmName `
+    -Image $vmImage `
+    -Size $vmSize `
+    -VirtualNetworkName $virtualNetworkName `
+    -SubnetName $subnetName `
+    -PublicIpAddressName $publicIpAddressName `
+    -SecurityGroupName $networkSecurityGroupName `
+    -SshKeyName $sshKeyName `
+    -GenerateSshKey:$false
