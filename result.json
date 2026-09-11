@@ -1,0 +1,33 @@
+{
+  "task": "azure_task_9_create_a_vm_with_powershell",
+  "validationStatus": "passed",
+  "validationMessage": "Congratulations! All tests passed!",
+  "resources": {
+    "resourceGroup": "mate-azure-task-9",
+    "location": "denmarkeast",
+    "networkSecurityGroup": "defaultnsg",
+    "virtualNetwork": "vnet",
+    "subnet": "default",
+    "publicIp": "linuxboxpip",
+    "sshKey": "linuxboxsshkey",
+    "virtualMachine": "matebox",
+    "vmImage": "Ubuntu2204",
+    "vmSize": "Standard_B1s"
+  },
+  "webApp": {
+    "deployed": true,
+    "path": "/app",
+    "service": "todoapp",
+    "endpoint": "http://matebox62508.denmarkeast.cloudapp.azure.com:8080/api/",
+    "httpStatus": 200
+  },
+  "checks": [
+    "Network Security Group exists",
+    "Virtual network vnet exists",
+    "Subnet default exists",
+    "Public IP linuxboxpip with DNS label exists",
+    "SSH key linuxboxsshkey exists and is used by VM",
+    "VM matebox uses Ubuntu 22.04 and Standard_B1s",
+    "Web application responds on port 8080"
+  ]
+}

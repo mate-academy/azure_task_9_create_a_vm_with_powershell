@@ -35,7 +35,7 @@ New-AzVirtualNetwork `
     -Subnet $subnetConfig
 
 Write-Host "Creating a public IP address $publicIpAddressName with DNS label $dnsLabel ..."
-# Basic public IP SKU was retired; Standard + Static is required for new deployments.
+# Basic public IP SKU is retired; Standard + Static is required for new deployments.
 New-AzPublicIpAddress `
     -Name $publicIpAddressName `
     -ResourceGroupName $resourceGroupName `
@@ -51,6 +51,7 @@ New-AzSshKey `
     -PublicKey $sshKeyPublicKey.Trim()
 
 Write-Host "Creating a virtual machine $vmName ..."
+# Credential supplies the Linux admin username; authentication uses -SshKeyName (not password login).
 $securePassword = ConvertTo-SecureString "UnusedPassw0rd!" -AsPlainText -Force
 $credential = New-Object System.Management.Automation.PSCredential ($vmAdminUsername, $securePassword)
 
