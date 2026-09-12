@@ -1,4 +1,4 @@
-$location = "uksouth"
+$location = "DenmarkEast"
 $resourceGroupName = "mate-azure-task-9"
 $networkSecurityGroupName = "defaultnsg"
 $virtualNetworkName = "vnet"
@@ -11,6 +11,8 @@ $sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub"
 $vmName = "matebox"
 $vmImage = "Ubuntu2204"
 $vmSize = "Standard_B1s"
+$vmAdminUsername = "azureuser"
+$dnsLabel = "matebox"
 
 Write-Host "Creating a resource group $resourceGroupName ..."
 New-AzResourceGroup -Name $resourceGroupName -Location $location
@@ -21,3 +23,50 @@ $nsgRuleHTTP = New-AzNetworkSecurityRuleConfig -Name HTTP  -Protocol Tcp -Direct
 New-AzNetworkSecurityGroup -Name $networkSecurityGroupName -ResourceGroupName $resourceGroupName -Location $location -SecurityRules $nsgRuleSSH, $nsgRuleHTTP
 
 # ↓↓↓ Write your code here ↓↓↓
+Write-Host "Creating a virtual network $virtualNetworkName with subnet $subnetName ..."
+$subnetConfig = New-AzVirtualNetworkSubnetConfig -Name $subnetName -AddressPrefix $subnetAddressPrefix
+New-AzVirtualNetwork `
+    -Name $virtualNetworkName `
+    -ResourceGroupName $resourceGroupName `
+    -Location $location `
+    -AddressPrefix $vnetAddressPrefix `
+    -Subnet $subnetConfig
+
+Write-Host "Creating a public IP address $publicIpAddressName with DNS label $dnsLabel ..."
+# Basic public IP SKU was retired; Standard + Static is required for new deployments.
+# Basic public IP SKU is retired; Standard + Static is required for new deployments.
+New-AzPublicIpAddress `
+    -Name $publicIpAddressName `
+    -ResourceGroupName $resourceGroupName `
+    -Location $location `
+    -Sku Standard `
+    -AllocationMethod Static `
+    -DomainNameLabel $dnsLabel
+
+Write-Host "Creating an SSH key resource $sshKeyName ..."
+New-AzSshKey `
+    -ResourceGroupName $resourceGroupName `
+    -Name $sshKeyName `
+    -PublicKey $sshKeyPublicKey.Trim()
+
+Write-Host "Creating a virtual machine $vmName ..."
+# Credential supplies the Linux admin username; authentication uses -SshKeyName (not password login).
+$securePassword = ConvertTo-SecureString "toor!" -AsPlainText -Force
+$credential = New-Object System.Management.Automation.PSCredential ($vmAdminUsername, $securePassword)
+
+New-AzVm `
+    -ResourceGroupName $resourceGroupName `
+    -Name $vmName `
+    -Location $location `
+    -Image $vmImage `
+    -Size $vmSize `
+    -VirtualNetworkName $virtualNetworkName `
+    -SubnetName $subnetName `
+    -SecurityGroupName $networkSecurityGroupName `
+    -PublicIpAddressName $publicIpAddressName `
+    -Credential $credential `
+    -SshKeyName $sshKeyName
+
+Write-Host "Deployment completed. VM admin username: $vmAdminUsername"
+$publicIp = Get-AzPublicIpAddress -ResourceGroupName $resourceGroupName -Name $publicIpAddressName
+Write-Host "Public IP FQDN: $($publicIp.DnsSettings.Fqdn)"
