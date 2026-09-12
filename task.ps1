@@ -12,6 +12,7 @@ $vmName = "matebox"
 $vmImage = "Ubuntu2204"
 $vmSize = "Standard_B1s"
 $vmAdminUsername = "azureuser"
+$dnsLabel = "matebox"
 
 Write-Host "Creating a resource group $resourceGroupName ..."
 New-AzResourceGroup -Name $resourceGroupName -Location $location
