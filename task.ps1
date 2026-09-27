@@ -16,6 +16,7 @@ $sshKeyPublicKey = Get-Content "$HOME\.ssh\id_rsa.pub"
 $vmName = "matebox"
 $vmImage = "Ubuntu2204"
 $vmSize = "Standard_B2s_v2"
+$ErrorActionPreference = "Stop"
 
 
 # ============================================
@@ -119,13 +120,7 @@ $sshKey = New-AzSshKey `
 
 Write-Host "Creating network interface ..."
 
-$nic = New-AzNetworkInterface `
-    -Name "$vmName-nic" `
-    -ResourceGroupName $resourceGroupName `
-    -Location $location `
-    -SubnetId $vnet.Subnets[0].Id `
-    -PublicIpAddressId $publicIp.Id `
-    -NetworkSecurityGroupId $nsg.Id
+
 
 
 # ============================================
@@ -143,38 +138,18 @@ $credential = New-Object `
     System.Management.Automation.PSCredential `
     ("azureuser", $securePassword)
 
-$vmConfig = New-AzVMConfig `
-    -VMName $vmName `
-    -VMSize $vmSize
-
-$vmConfig = Set-AzVMOperatingSystem `
-    -VM $vmConfig `
-    -Linux `
-    -ComputerName $vmName `
-    -Credential $credential `
-    -DisablePasswordAuthentication
-
-$vmConfig = Set-AzVMSourceImage `
-    -VM $vmConfig `
-    -PublisherName "Canonical" `
-    -Offer "0001-com-ubuntu-server-jammy" `
-    -Skus "22_04-lts-gen2" `
-    -Version "latest"
-
-$vmConfig = Add-AzVMSshPublicKey `
-    -VM $vmConfig `
-    -KeyData $sshKeyPublicKey `
-    -Path "/home/azureuser/.ssh/authorized_keys"
-
-$vmConfig = Add-AzVMNetworkInterface `
-    -VM $vmConfig `
-    -Id $nic.Id
-
 New-AzVM `
+    -Name $vmName `
     -ResourceGroupName $resourceGroupName `
     -Location $location `
-    -VM $vmConfig
-
+    -Credential $credential `
+    -VirtualNetworkName $virtualNetworkName `
+    -SubnetName $subnetName `
+    -PublicIpAddressName $publicIpAddressName `
+    -SecurityGroupName $networkSecurityGroupName `
+    -Image $vmImage `
+    -Size $vmSize `
+    -SshKeyName $sshKeyName
 
 # ============================================
 # OUTPUT
