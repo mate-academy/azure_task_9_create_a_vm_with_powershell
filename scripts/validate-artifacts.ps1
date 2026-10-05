@@ -111,7 +111,7 @@ if ($pip.properties.dnsSettings.domainNameLabel) {
 $pipName = $pip.name.Replace("[parameters('publicIPAddresses_", "").Replace("_name')]", "")
 if ($pipName -eq "linuxboxpip") { 
     Write-Output "`u{2705} Checked the Public IP name - OK"
-} { 
+} else { 
     Write-Output `u{1F914}
     throw "Unable to verify the Public IP name. Please make sure that your script creates a public IP called 'linuxboxpip' and try again."
 }
@@ -195,11 +195,11 @@ if ($virtualMachine.properties.storageProfile.imageReference.offer.Contains('ubu
     throw "Virtual Machine uses wrong OS image. Please make sure that your script creates a VM from image with friendly name 'Ubuntu2204' and try again." 
 }
 
-if ($virtualMachine.properties.hardwareProfile.vmSize -eq "Standard_B1s") { 
+if ($virtualMachine.properties.hardwareProfile.vmSize -eq "Standard_B2ats_v2") { 
     Write-Output "`u{2705} Checked Virtual Machine size - OK"
 } else { 
     Write-Output `u{1F914}
-    throw "Virtual Machine size is not set to B1s. Please make sure that your script creates a VM with size B1s and try again."
+    throw "Virtual Machine size is not set to B2ats. Please make sure that your script creates a VM with size B2ats and try again."
 }
 
 $response = (Invoke-WebRequest -Uri "http://$($pip.properties.dnsSettings.fqdn):8080/api/" -ErrorAction SilentlyContinue) 
