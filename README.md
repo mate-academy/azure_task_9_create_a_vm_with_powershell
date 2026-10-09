@@ -41,7 +41,7 @@ In this task, you will need to write and run a PowerShell script, which deploys 
     
     - In the script, you should assume that you are already logged in to Azure and using the correct subscription (don't use commands `Connect-AzAccount` and `Set-AzContext`, if needed - just run them on your computer before running the script). 
 
-    - Use any region you want, for example `uksouth`. 
+    - Use any region that is available in your Azure subscription, for example `westus2`. 
 
     - Script already has code, which uses commandlet [New-AzResourceGroup](https://learn.microsoft.com/en-us/powershell/module/az.resources/new-azresourcegroup?view=azps-11.5.0) to create a resource group `mate-azure-task-9`. Please make sure that all your resources are deployed to that resource group. 
 
