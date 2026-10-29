@@ -1,4 +1,4 @@
-$location = "westus2" # any region that is available in your Azure subscription
+$location = "swedencentral" # any region that is available in your Azure subscription
 $resourceGroupName = "mate-azure-task-9"
 $networkSecurityGroupName = "defaultnsg"
 $virtualNetworkName = "vnet"
@@ -7,10 +7,10 @@ $vnetAddressPrefix = "10.0.0.0/16"
 $subnetAddressPrefix = "10.0.0.0/24"
 $publicIpAddressName = "linuxboxpip"
 $sshKeyName = "linuxboxsshkey"
-$sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub" 
+$sshKeyPublicKey = Get-Content "~/.ssh/id_ed25519.pub"
 $vmName = "matebox"
 $vmImage = "Ubuntu2204"
-$vmSize = "Standard_B1s"
+$vmSize = "Standard_B2ts_v2"
 
 Write-Host "Creating a resource group $resourceGroupName ..."
 New-AzResourceGroup -Name $resourceGroupName -Location $location
@@ -21,3 +21,12 @@ $nsgRuleHTTP = New-AzNetworkSecurityRuleConfig -Name HTTP  -Protocol Tcp -Direct
 New-AzNetworkSecurityGroup -Name $networkSecurityGroupName -ResourceGroupName $resourceGroupName -Location $location -SecurityRules $nsgRuleSSH, $nsgRuleHTTP
 
 # ↓↓↓ Write your code here ↓↓↓
+$subnetConfig = New-AzVirtualNetworkSubnetConfig -Name $subnetName -AddressPrefix $subnetAddressPrefix
+$vnet = New-AzVirtualNetwork -Name $virtualNetworkName -AddressPrefix $vnetAddressPrefix -ResourceGroupName $resourceGroupName -Location $location -Subnet $subnetConfig
+$publicIp = New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -AllocationMethod Static -Sku Standard -DomainNameLabel matebox-dan-2026
+$sshKey = New-AzSshKey -ResourceGroupName $resourceGroupName -Name $sshKeyName -Location $location -PublicKey $sshKeyPublicKey
+$vmUsername = "azureuser"
+$vmPassword = ConvertTo-SecureString ([guid]::NewGuid().ToString() + "aA1!") -AsPlainText -Force
+$vmCredential = [pscredential]::new($vmUsername, $vmPassword)
+
+$vm = New-AzVM -ResourceGroupName $resourceGroupName -Location $location -Name $vmName -Image $vmImage -Size $vmSize -VirtualNetworkName $virtualNetworkName -SubnetName $subnetName -PublicIpAddressName $publicIpAddressName -SecurityGroupName $networkSecurityGroupName -SshKeyName $sshKeyName -Credential $vmCredential
