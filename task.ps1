@@ -31,7 +31,19 @@ $dnsLabel = "matebox-khrystyna3"
 
 New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -AllocationMethod Static -Sku Standard -DomainNameLabel $dnsLabel -ErrorAction Stop
 
-New-AzSshKey -Name $sshKeyName -ResourceGroupName $resourceGroupName -Location $location -PublicKey $sshKeyPublicKey -ErrorAction Stop
+$sshKeyPath = "$HOME\.ssh\mate_azure_task2.pub"
+
+if (-not (Get-AzSshKey -Name $sshKeyName -ResourceGroupName $resourceGroupName -ErrorAction SilentlyContinue)) {
+
+    if (Test-Path $sshKeyPath) {
+        $sshKeyPublicKey = (Get-Content $sshKeyPath -Raw).Trim()
+
+        New-AzSshKey -Name $sshKeyName -ResourceGroupName $resourceGroupName -Location $location -PublicKey $sshKeyPublicKey
+    }
+    else {
+        New-AzSshKey -Name $sshKeyName -ResourceGroupName $resourceGroupName -Location $location
+    }
+}
 
 $credential = Get-Credential -UserName "azureuser" -Message "Enter VM credentials"
 
