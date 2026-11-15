@@ -1,0 +1,37 @@
+[
+  {
+    "Name": "defaultnsg",
+    "ResourceType": "Microsoft.Network/networkSecurityGroups",
+    "Location": "denmarkeast"
+  },
+  {
+    "Name": "vnet",
+    "ResourceType": "Microsoft.Network/virtualNetworks",
+    "Location": "denmarkeast"
+  },
+  {
+    "Name": "linuxboxpip",
+    "ResourceType": "Microsoft.Network/publicIPAddresses",
+    "Location": "denmarkeast"
+  },
+  {
+    "Name": "linuxboxsshkey",
+    "ResourceType": "Microsoft.Compute/sshPublicKeys",
+    "Location": "denmarkeast"
+  },
+  {
+    "Name": "matebox",
+    "ResourceType": "Microsoft.Network/networkInterfaces",
+    "Location": "denmarkeast"
+  },
+  {
+    "Name": "matebox",
+    "ResourceType": "Microsoft.Compute/virtualMachines",
+    "Location": "denmarkeast"
+  },
+  {
+    "Name": "matebox_disk1_90ff5e2e77ef465a93b4b47ffbd60d3c",
+    "ResourceType": "Microsoft.Compute/disks",
+    "Location": "denmarkeast"
+  }
+]
