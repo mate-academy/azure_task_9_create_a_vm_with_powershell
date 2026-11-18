@@ -1,4 +1,4 @@
-$location = "westus2" # any region that is available in your Azure subscription
+$location = "denmarkeast" # any region that is available in your Azure subscription
 $resourceGroupName = "mate-azure-task-9"
 $networkSecurityGroupName = "defaultnsg"
 $virtualNetworkName = "vnet"
@@ -21,3 +21,46 @@ $nsgRuleHTTP = New-AzNetworkSecurityRuleConfig -Name HTTP  -Protocol Tcp -Direct
 New-AzNetworkSecurityGroup -Name $networkSecurityGroupName -ResourceGroupName $resourceGroupName -Location $location -SecurityRules $nsgRuleSSH, $nsgRuleHTTP
 
 # ↓↓↓ Write your code here ↓↓↓
+
+
+Write-Host "Creating a virtual network $virtualNetworkName ..."
+$subnet = New-AzVirtualNetworkSubnetConfig `
+    -Name $subnetName `
+    -AddressPrefix $subnetAddressPrefix
+
+New-AzVirtualNetwork `
+    -Name $virtualNetworkName `
+    -ResourceGroupName $resourceGroupName `
+    -Location $location `
+    -AddressPrefix $vnetAddressPrefix `
+    -Subnet $subnet
+
+Write-Host "Creating a public IP address $publicIpAddressName ..."
+New-AzPublicIpAddress `
+    -Name $publicIpAddressName `
+    -ResourceGroupName $resourceGroupName `
+    -Location $location `
+    -Sku Standard `
+    -AllocationMethod Static `
+    -DomainNameLabel "antonbox123"
+
+Write-Host "Creating an SSH key $sshKeyName ..."
+New-AzSshKey `
+    -ResourceGroupName $resourceGroupName `
+    -Name $sshKeyName `
+    -PublicKey $sshKeyPublicKey
+
+
+
+Write-Host "Creating a virtual machine $vmName ..."
+New-AzVm `
+    -ResourceGroupName $resourceGroupName `
+    -Name $vmName `
+    -Location $location `
+    -Image $vmImage `
+    -Size $vmSize `
+    -VirtualNetworkName $virtualNetworkName `
+    -SubnetName $subnetName `
+    -SecurityGroupName $networkSecurityGroupName `
+    -PublicIpAddressName $publicIpAddressName `
+    -SshKeyName $sshKeyName
